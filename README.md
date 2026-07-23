@@ -38,7 +38,7 @@ The shared NixOS config lives in `~/dotfiles/nixos/default.nix` and is imported 
 - Firefox, unfree packages
 - User account
 
-### Home Manager (`~/dotfiles/`)
+### Home Manager (`~/dotfiles`)
 
 Managed via a flake. Installs user packages, sets up git, symlinks dotfiles, and runs a systemd service that auto-syncs the repo on boot.
 
@@ -80,7 +80,7 @@ sudo nixos-rebuild switch
 ### 3. Activate Home Manager
 
 ```bash
-nix run home-manager -- init --switch ~/dotfiles/
+nix run home-manager -- init --switch ~/dotfiles
 ```
 
 ## Applying changes
@@ -94,7 +94,7 @@ sudo nixos-rebuild switch
 After editing Home Manager config (`home.nix`, `flake.nix`):
 
 ```bash
-nix run home-manager -- init --switch ~/dotfiles/
+nix run home-manager -- init --switch ~/dotfiles
 ```
 
 ## Key concepts
@@ -114,7 +114,7 @@ home-manager news
 home-manager packages
 
 # Dry-build Home Manager to test without applying
-nix run home-manager -- init --switch ~/dotfiles/ --dry-run
+nix run home-manager -- init --switch ~/dotfiles --dry-run
 
 # Update flake inputs
 nix flake update

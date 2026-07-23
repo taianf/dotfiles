@@ -19,6 +19,7 @@
     neovim
     nixfmt
     uv
+    opencode
     wget
     zed-editor
   ];
@@ -35,12 +36,12 @@
       ];
     };
     shellAliases = {
-      rebuild = "sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles/";
+      rebuild = "sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles";
     };
     initContent = ''
       # Rebuild both NixOS and Home Manager
       rebuild() {
-        sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles/
+        sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles
       }
     '';
   };
