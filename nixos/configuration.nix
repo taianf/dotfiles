@@ -1,6 +1,6 @@
 # Machine-specific configuration — lives in ~/dotfiles, symlinked to /etc/nixos/
 # On new machines: sudo ln -sf ~/dotfiles/nixos/configuration.nix /etc/nixos/configuration.nix
-{ config, pkgs, ... }:
+_:
 
 let
   sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";

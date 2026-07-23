@@ -1,5 +1,5 @@
 # Sops-nix configuration for managing secrets
-{ config, ... }:
+_:
 
 {
   sops = {

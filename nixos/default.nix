@@ -1,5 +1,5 @@
 # Shared NixOS configuration — import this from any machine's configuration.nix
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   # Locale & timezone
@@ -29,8 +29,19 @@
         variant = "alt-intl";
       };
     };
-    displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
+    displayManager = {
+      defaultSession = "plasma";
+      gdm.enable = true;
+      sddm = {
+        enable = true;
+        wayland.enable = true;
+      };
+    };
+    desktopManager = {
+      gnome.enable = true;
+      cosmic.enable = true;
+      plasma6.enable = true;
+    };
     pulseaudio.enable = false;
     pipewire = {
       enable = true;

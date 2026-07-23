@@ -1,5 +1,5 @@
 # Declarative DDC/CI monitor settings — BenQ P275MV Plus
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 let
   monitorSettings = {
