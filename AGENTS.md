@@ -1,0 +1,66 @@
+# AGENTS.md — Rules for this dotfiles repo
+
+## Architecture
+
+This repo manages both **NixOS** (system) and **Home Manager** (user) configuration.
+
+- `nixos/` — shared NixOS modules (imported by `/etc/nixos/configuration.nix`)
+- `home.nix` / `flake.nix` — Home Manager (user-level packages, programs, shell, dotfiles)
+- Machine-specific NixOS config stays in `/etc/nixos/` (not in this repo)
+
+## Rules
+
+### Package management
+
+- **Prefer `programs.*` over `home.packages`** whenever a Home Manager module exists.
+  Example: use `programs.git.enable = true` instead of adding `git` to `home.packages`.
+  Search available modules at https://home-manager-options.extranix.com/
+- **Don't add to `home.packages`** what `programs.*` already installs.
+  Example: don't put `git` in packages if `programs.git.enable = true`.
+- **Don't use `extraPackages`** for tools already in `home.packages` (they share the same PATH).
+
+### NixOS config
+
+- Keep `/etc/nixos/configuration.nix` **minimal** — only machine-specific things
+  (bootloader, hostname, hardware imports).
+- **Shared NixOS config** goes in `nixos/default.nix` and is imported by all machines.
+- **User-level config** (packages, dotfiles, shell) belongs in Home Manager, not NixOS.
+  Example: dotfiles sync service is a `systemd.user.services` in `home.nix`,
+  not `systemd.services` in NixOS config.
+
+### Zsh
+
+- Use `programs.zsh.initContent`, not `initExtra` (deprecated).
+- Default shell is set via `users.users.<name>.shell = pkgs.zsh` in NixOS
+  and `programs.zsh.enable = true` in both NixOS and Home Manager.
+
+### Git / dotfiles sync
+
+- Use `git -C <path>` for regular repos. `--git-dir` / `--work-tree` is for bare repos.
+- `home.stateVersion` and `system.stateVersion` are **never updated** after initial setup.
+
+### Secrets
+
+- Use `sops-nix` for managing secrets (API keys, passwords).
+- Secrets go in a `secrets.yaml` encrypted with sops, referenced via `config.sops.secrets.<name>.path`.
+
+### Safety
+
+- **Back up before changing system configs**: `sudo cp /etc/nixos/configuration.nix /etc/nixos/configuration.nix.bak`
+- `.bak` files are gitignored — keep them local.
+
+### Rebuild command
+
+```bash
+rebuild
+# equivalent to:
+sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles/
+```
+
+### Updating
+
+```bash
+nix flake update   # update flake.lock (latest nixpkgs + home-manager)
+rebuild            # apply updated packages
+home-manager news  # check for breaking changes
+```
