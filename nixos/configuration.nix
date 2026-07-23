@@ -4,17 +4,19 @@
 
 let
   sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-  nixflix = builtins.fetchTarball "https://github.com/kiriwalawren/nixflix/archive/main.tar.gz";
+  nixflix = builtins.fetchTarball "https://github.com/kiriwalawren/nixflix/archive/master.tar.gz";
+  vpn-confinement = builtins.fetchTarball "https://github.com/Maroka-chan/VPN-Confinement/archive/master.tar.gz";
 in
 {
   imports = [
-    "${nixflix}/nixosModules/default.nix"
-    "${sops-nix}/modules/sops-nix.nix"
+    /etc/nixos/hardware-configuration.nix
+    "${nixflix}/modules/default.nix"
+    "${sops-nix}/modules/sops/default.nix"
+    "${vpn-confinement}/modules/vpn-netns.nix"
     ./default.nix
-    ./nixflix.nix
+    ./nixflix
     ./nvidia.nix
     ./sops.nix
-    /etc/nixos/hardware-configuration.nix
   ];
 
   # Bootloader

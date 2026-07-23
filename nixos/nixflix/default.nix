@@ -7,13 +7,17 @@
     "sonarr/password" = { };
     "radarr/api_key" = { };
     "radarr/password" = { };
+    "lidarr/api_key" = { };
+    "lidarr/password" = { };
     "prowlarr/api_key" = { };
     "prowlarr/password" = { };
     "sabnzbd/api_key" = { };
     "sabnzbd/nzb_key" = { };
     "sabnzbd/username" = { };
     "sabnzbd/password" = { };
+    "jellyfin/api_key" = { };
     "jellyfin/admin_password" = { };
+    "seerr/api_key" = { };
   };
 
   nixflix = {
@@ -45,6 +49,14 @@
       };
     };
 
+    lidarr = {
+      enable = true;
+      config = {
+        apiKey._secret = config.sops.secrets."lidarr/api_key".path;
+        hostConfig.password._secret = config.sops.secrets."lidarr/password".path;
+      };
+    };
+
     prowlarr = {
       enable = true;
       config = {
@@ -53,7 +65,7 @@
       };
     };
 
-    sabnzbd = {
+    usenetClients.sabnzbd = {
       enable = true;
       settings = {
         misc = {
@@ -67,10 +79,19 @@
 
     jellyfin = {
       enable = true;
-      users.admin = {
-        policy.isAdministrator = true;
-        password._secret = config.sops.secrets."jellyfin/admin_password".path;
+      apiKey._secret = config.sops.secrets."jellyfin/api_key".path;
+      users = {
+        admin = {
+          mutable = false;
+          policy.isAdministrator = true;
+          password._secret = config.sops.secrets."jellyfin/admin_password".path;
+        };
       };
+    };
+
+    seerr = {
+      enable = true;
+      apiKey._secret = config.sops.secrets."seerr/api_key".path;
     };
   };
 }

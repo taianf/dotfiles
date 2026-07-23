@@ -16,6 +16,7 @@
   home.packages = with pkgs; [
     google-chrome
     nixfmt
+    sops
     uv
     wget
     zed-editor
