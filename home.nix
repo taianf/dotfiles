@@ -55,7 +55,15 @@
         # Rebuild both NixOS and Home Manager
         nixup() {
           local log
-          if [ "$1" = "--verbose" ]; then
+          if [ "$1" = "--dry-run" ]; then
+            echo "==> Checking flake..."
+            nix flake check ~/dotfiles && echo "✓ flake check passed"
+            echo "==> Parsing nix files..."
+            for f in ~/dotfiles/*.nix ~/dotfiles/nixos/*.nix; do
+              nix-instantiate --parse "$f" > /dev/null && echo "✓ $f"
+            done
+            return 0
+          elif [ "$1" = "--verbose" ]; then
             sudo nixos-rebuild switch && \
             nix run home-manager -- -v init --switch ~/dotfiles
           else

@@ -31,11 +31,7 @@
     };
     displayManager = {
       defaultSession = "plasma";
-      gdm.enable = true;
-      sddm = {
-        enable = true;
-        wayland.enable = true;
-      };
+      cosmic-greeter.enable = true;
     };
     desktopManager = {
       gnome.enable = true;
@@ -58,6 +54,7 @@
     nix-ld.enable = true;
     firefox.enable = true;
     zsh.enable = true;
+    ssh.askPassword = pkgs.lib.mkForce "${pkgs.kdePackages.ksshaskpass}/bin/ksshaskpass";
   };
 
   # DDC/CI monitor control
