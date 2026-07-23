@@ -49,6 +49,14 @@
     zsh.enable = true;
   };
 
+  # DDC/CI monitor control
+  hardware.i2c.enable = true;
+
+  environment.systemPackages = with pkgs; [
+    ddcutil
+    ddcui
+  ];
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -57,6 +65,7 @@
     isNormalUser = true;
     description = "Taian Fonseca Feitosa";
     extraGroups = [
+      "i2c"
       "networkmanager"
       "wheel"
     ];
