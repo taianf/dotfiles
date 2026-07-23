@@ -16,6 +16,7 @@ in
     ./default.nix
     ./nixflix
     ./nvidia.nix
+    ./p275mv-plus.nix
     ./sops.nix
   ];
 
