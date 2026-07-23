@@ -23,10 +23,10 @@ dotfiles/
 
 Two layers of Nix manage your system:
 
-| Layer | Config location | What it controls |
-|-------|----------------|-----------------|
-| **NixOS** (system) | `dotfiles/nixos/` (symlinked to `/etc/nixos/`) | Boot, hardware, networking, services, secrets |
-| **Home Manager** (user) | `dotfiles/home.nix` | Packages, dotfiles sync, shell, git, symlinks |
+| Layer                   | Config location                                | What it controls                              |
+| ----------------------- | ---------------------------------------------- | --------------------------------------------- |
+| **NixOS** (system)      | `dotfiles/nixos/` (symlinked to `/etc/nixos/`) | Boot, hardware, networking, services, secrets |
+| **Home Manager** (user) | `dotfiles/home.nix`                            | Packages, dotfiles sync, shell, git, symlinks |
 
 ### NixOS (`dotfiles/nixos/`)
 

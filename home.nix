@@ -10,58 +10,60 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  home.stateVersion = "23.11";
-  home.homeDirectory = "/home/taian";
-  home.username = "taian";
+  home = {
+    stateVersion = "23.11";
+    homeDirectory = "/home/taian";
+    username = "taian";
 
-  home.packages =
-    with pkgs;
-    [
-      google-chrome
-      nil
-      nixd
-      nixfmt
-      sops
-      uv
-      wget
-      zed-editor
-    ]
-    ++ [
-      herdr.packages.${system}.default
-    ];
-
-  # OpenCode AI coding agent
-  programs.opencode = {
-    enable = true;
-  };
-
-  # Zsh with Oh My Zsh
-  programs.zsh = {
-    enable = true;
-    oh-my-zsh = {
-      enable = true;
-      theme = "robbyrussell";
-      plugins = [
-        "git"
-        "sudo"
+    packages =
+      with pkgs;
+      [
+        google-chrome
+        nil
+        nixd
+        nixfmt
+        sops
+        statix
+        uv
+        wget
+        zed-editor
+      ]
+      ++ [
+        herdr.packages.${system}.default
       ];
-    };
-    shellAliases = {
-      rebuild = "sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles";
-    };
-    initContent = ''
-      # Rebuild both NixOS and Home Manager
-      rebuild() {
-        sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles
-      }
-    '';
   };
 
-  # Ensure the dotfiles repo is cloned at boot
-  programs.git = {
-    enable = true;
-    settings.user.name = "Taian Fonseca Feitosa";
-    settings.user.email = "taian.f.feitosa@gmail.com";
+  programs = {
+    ghostty.enable = true;
+    opencode.enable = true;
+    gh.enable = true;
+
+    zsh = {
+      enable = true;
+      oh-my-zsh = {
+        enable = true;
+        theme = "robbyrussell";
+        plugins = [
+          "git"
+          "sudo"
+        ];
+      };
+      shellAliases = {
+        rebuild = "sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles";
+      };
+      initContent = ''
+        # Rebuild both NixOS and Home Manager
+        rebuild() {
+          sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles
+        }
+      '';
+    };
+
+    git = {
+      enable = true;
+      settings.user.name = "Taian Fonseca Feitosa";
+      settings.user.email = "taian.f.feitosa@gmail.com";
+    };
   };
 
   # Use a systemd service to pull the latest dotfiles on each boot
