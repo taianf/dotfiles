@@ -48,6 +48,9 @@
   # Firefox
   programs.firefox.enable = true;
 
+  # Zsh as default shell
+  programs.zsh.enable = true;
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -59,5 +62,6 @@
       "networkmanager"
       "wheel"
     ];
+    shell = pkgs.zsh;
   };
 }
