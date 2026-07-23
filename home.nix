@@ -2,6 +2,7 @@
   callPackage,
   config,
   pkgs,
+  herdr,
   ...
 }:
 
@@ -13,14 +14,21 @@
   home.homeDirectory = "/home/taian";
   home.username = "taian";
 
-  home.packages = with pkgs; [
-    google-chrome
-    nixfmt
-    sops
-    uv
-    wget
-    zed-editor
-  ];
+  home.packages =
+    with pkgs;
+    [
+      google-chrome
+      nil
+      nixd
+      nixfmt
+      sops
+      uv
+      wget
+      zed-editor
+    ]
+    ++ [
+      herdr.packages.${system}.default
+    ];
 
   # OpenCode AI coding agent
   programs.opencode = {
