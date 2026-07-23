@@ -57,9 +57,7 @@
     Service = {
       Type = "oneshot";
       ExecStart = ''
-        ${pkgs.git}/bin/git --git-dir=/home/taian/.dotfiles/ \
-          --work-tree=/home/taian/ \
-          pull origin main
+        ${pkgs.git}/bin/git -C ${config.home.homeDirectory}/dotfiles pull origin main
       '';
     };
   };
