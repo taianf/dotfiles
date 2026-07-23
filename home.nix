@@ -18,10 +18,9 @@
     google-chrome
     neovim
     nixfmt
-    zed-editor
     uv
     wget
-    # ...
+    zed-editor
   ];
 
   # Zsh with Oh My Zsh
