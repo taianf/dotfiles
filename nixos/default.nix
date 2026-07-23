@@ -45,6 +45,9 @@
   # Printing
   services.printing.enable = true;
 
+  # SSH — required for sops-nix age key
+  services.openssh.enable = true;
+
   # Firefox
   programs.firefox.enable = true;
 
