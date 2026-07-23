@@ -6,9 +6,6 @@
 }:
 
 {
-  # ...
-  # Some default configuration
-  # ...
 
   nixpkgs.config.allowUnfree = true;
 
@@ -22,6 +19,7 @@
     neovim
     nixfmt
     zed-editor
+    uv
     zsh
     wget
     # ...
@@ -45,6 +43,7 @@
     settings.user.name = "Taian Fonseca Feitosa";
     settings.user.email = "taian.f.feitosa@gmail.com";
   };
+
   # Use a systemd service to pull the latest dotfiles on each boot
   systemd.user.services.dotfiles-sync = {
     Unit = {
