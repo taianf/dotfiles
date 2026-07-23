@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "nixos-managing": {
+      "source": "michalzubkowicz/nixos-management-skill",
+      "sourceType": "github",
+      "skillPath": "nixos-managing/SKILL.md",
+      "computedHash": "6a9f5aa6cbac5fe13cd7f0cd97da30b4eb362ba63af93a1711a87d03876d5f5e"
+    }
+  }
+}
