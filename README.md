@@ -4,7 +4,7 @@ NixOS + Home Manager configuration managed as a Git repo.
 
 ## Structure
 
-```
+```text
 dotfiles/
 ├── flake.nix                      # Home Manager flake entry point
 ├── home.nix                       # Home Manager config (user packages, dotfiles sync, shell)
@@ -23,10 +23,10 @@ dotfiles/
 
 Two layers of Nix manage your system:
 
-| Layer                   | Config location                                | What it controls                              |
-| ----------------------- | ---------------------------------------------- | --------------------------------------------- |
-| **NixOS** (system)      | `dotfiles/nixos/` (symlinked to `/etc/nixos/`) | Boot, hardware, networking, services, secrets |
-| **Home Manager** (user) | `dotfiles/home.nix`                            | Packages, dotfiles sync, shell, git, symlinks |
+- **NixOS** (system) — `dotfiles/nixos/` (symlinked to `/etc/nixos/`):
+  Boot, hardware, networking, services, secrets
+- **Home Manager** (user) — `dotfiles/home.nix`:
+  Packages, dotfiles sync, shell, git, symlinks
 
 ### NixOS (`dotfiles/nixos/`)
 
@@ -39,7 +39,8 @@ Two layers of Nix manage your system:
 
 ### Home Manager (`dotfiles/`)
 
-Managed via a flake. Installs user packages, sets up git, symlinks dotfiles, and runs a systemd service that auto-syncs the repo on boot.
+Managed via a flake. Installs user packages, sets up git, symlinks dotfiles, and
+runs a systemd service that auto-syncs the repo on boot.
 
 ## Setup on a new machine
 
@@ -152,11 +153,17 @@ rebuild
 
 ## Key concepts
 
-- **`nix-ld`** — enabled in shared config so uv, and other tools that download dynamically linked binaries, work on NixOS.
-- **`dotfiles-sync.service`** — a user-level systemd service defined in `home.nix` that runs `git pull` on boot to keep dotfiles up to date.
-- **Dotfile symlinks** — `home.nix` uses `mkOutOfStoreSymlink` to symlink `.config/zsh` and `.zshenv` from this repo into your home, so edits in the repo take effect immediately.
+- **`nix-ld`** — enabled in shared config so uv, and other tools that download
+  dynamically linked binaries, work on NixOS.
+- **`dotfiles-sync.service`** — a user-level systemd service defined in
+  `home.nix` that runs `git pull` on boot to keep dotfiles up to date.
+- **Dotfile symlinks** — `home.nix` uses `mkOutOfStoreSymlink` to symlink
+  `.config/zsh` and `.zshenv` from this repo into your home, so edits in the
+  repo take effect immediately.
 - **`*.bak` files** — gitignored; used for local backups before config changes.
-- **sops-nix** — uses each machine's SSH host key (`/etc/ssh/ssh_host_ed25519_key`) to decrypt `secrets.yaml`. No extra key management needed.
+- **sops-nix** — uses each machine's SSH host key
+  (`/etc/ssh/ssh_host_ed25519_key`) to decrypt `secrets.yaml`. No extra key
+  management needed.
 
 ## Useful commands
 

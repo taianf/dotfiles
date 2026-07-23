@@ -53,7 +53,7 @@ sops updatekeys ~/dotfiles/secrets.yaml
 
 Created automatically on first rebuild:
 
-```
+```text
 /data/
 ├── media/
 │   ├── movies/       # Radarr → Jellyfin "Movies"

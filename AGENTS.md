@@ -14,7 +14,7 @@ This repo manages both **NixOS** (system) and **Home Manager** (user) configurat
 
 - **Prefer `programs.*` over `home.packages`** whenever a Home Manager module exists.
   Example: use `programs.git.enable = true` instead of adding `git` to `home.packages`.
-  Search available modules at https://home-manager-options.extranix.com/
+  Search available modules at <https://home-manager-options.extranix.com/>
 - **Don't add to `home.packages`** what `programs.*` already installs.
   Example: don't put `git` in packages if `programs.git.enable = true`.
 - **Don't use `extraPackages`** for tools already in `home.packages` (they share the same PATH).
