@@ -34,7 +34,10 @@
   };
 
   programs = {
-    ghostty.enable = true;
+    ghostty = {
+      enable = true;
+      enableZshIntegration = true;
+    };
     opencode.enable = true;
     gh.enable = true;
 
@@ -48,13 +51,23 @@
           "sudo"
         ];
       };
-      shellAliases = {
-        rebuild = "sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles";
-      };
       initContent = ''
         # Rebuild both NixOS and Home Manager
-        rebuild() {
-          sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles
+        nixup() {
+          local log
+          if [ "$1" = "--verbose" ]; then
+            sudo nixos-rebuild switch && \
+            nix run home-manager -- -v init --switch ~/dotfiles
+          else
+            log=$(sudo nixos-rebuild switch --quiet 2>&1) || {
+              echo "$log"
+              return 1
+            }
+            log=$(nix run home-manager -- init --switch ~/dotfiles 2>&1) || {
+              echo "$log"
+              return 1
+            }
+          fi
         }
       '';
     };

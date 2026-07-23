@@ -52,15 +52,14 @@ This repo manages both **NixOS** (system) and **Home Manager** (user) configurat
 ### Rebuild command
 
 ```bash
-rebuild
-# equivalent to:
-sudo nixos-rebuild switch && nix run home-manager -- init --switch ~/dotfiles/
+nixup             # quiet (errors only)
+nixup --verbose   # full output
 ```
 
 ### Updating
 
 ```bash
 nix flake update   # update flake.lock (latest nixpkgs + home-manager)
-rebuild            # apply updated packages
+nixup              # apply updated packages
 home-manager news  # check for breaking changes
 ```

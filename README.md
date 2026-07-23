@@ -148,7 +148,7 @@ nix run home-manager -- init --switch ~/dotfiles
 Or use the shorthand:
 
 ```bash
-rebuild
+nixup
 ```
 
 ## Key concepts
