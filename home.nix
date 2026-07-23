@@ -34,8 +34,11 @@
   };
 
   # Ensure the dotfiles repo is cloned at boot
-  programs.git.enable = true;
-
+  programs.git = {
+    enable = true;
+    userName = "Taian Fonseca Feitosa";
+    userEmail = "taian.f.feitosa@gmail.com";
+  };
   # Use a systemd service to pull the latest dotfiles on each boot
   systemd.services.dotfiles-sync = {
     description = "Sync dotfiles from Git";
