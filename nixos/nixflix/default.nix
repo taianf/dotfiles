@@ -80,6 +80,7 @@
     jellyfin = {
       enable = true;
       apiKey._secret = config.sops.secrets."jellyfin/api_key".path;
+      network.enablePublishedServerUriByRequest = true;
       users = {
         admin = {
           mutable = false;
