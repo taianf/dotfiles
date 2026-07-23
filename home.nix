@@ -14,15 +14,17 @@
   home.username = "taian";
 
   home.packages = with pkgs; [
-    git
     google-chrome
-    neovim
     nixfmt
     uv
-    opencode
     wget
     zed-editor
   ];
+
+  # OpenCode AI coding agent
+  programs.opencode = {
+    enable = true;
+  };
 
   # Zsh with Oh My Zsh
   programs.zsh = {
