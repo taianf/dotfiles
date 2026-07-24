@@ -7,13 +7,25 @@ repos:
         args: ["--branch", "main"]
       - id: detect-private-key
 
-  - repo: https://github.com/fidgetingbits/pre-commit-statix
-    rev: v1.0.0
+  - repo: local
     hooks:
       - id: statix-check
-        exclude: '\.agents/'
+        name: Statix Check
+        entry: statix
+        language: rust
+        additional_dependencies: ["cli:statix"]
+        types: [nix]
+        pass_filenames: false
+        exclude: "\\.agents/"
       - id: statix-fix
-        exclude: '\.agents/'
+        name: Statix Fix
+        entry: statix
+        args: ["--fix"]
+        language: rust
+        additional_dependencies: ["cli:statix"]
+        types: [nix]
+        pass_filenames: false
+        exclude: "\\.agents/"
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
@@ -27,10 +39,10 @@ repos:
       - id: markdownlint
         exclude: '\.agents/'
 
-  - repo: https://github.com/NixOS/nixfmt
-    rev: v1.4.0
+  - repo: https://github.com/kamadorueda/alejandra
+    rev: v4.0.0
     hooks:
-      - id: nixfmt-nix
+      - id: alejandra
         exclude: '\.agents/'
 
   - repo: https://github.com/pre-commit/mirrors-prettier
