@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec uv run --directory "$(dirname "$0")/../nixflix" python -m nixflix.cli "$@"
+exec uv run --directory "$(dirname "$0")/../nixos/nixflix" python -m nixflix.cli "$@"
