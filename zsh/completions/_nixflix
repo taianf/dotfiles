@@ -1,7 +1,16 @@
 #compdef nixflix
 
-_nixflix_completion() {
-  eval $(env _TYPER_COMPLETE_ARGS="${words[1,$CURRENT]}" _NIXFLIX_COMPLETE=complete_zsh nixflix)
+_nixflix() {
+  local -a subcmds
+  subcmds=(
+    'restart:Restart all nixflix services'
+    'refresh:Re-run config oneshot services'
+    'clean:Wipe all state data and recreate dirs'
+    'full-refresh:Clean state, rebuild system, re-apply config'
+    'setup:Recreate jellyfin directories'
+    'secrets:Manage encrypted secrets'
+  )
+  _describe 'nixflix' subcmds
 }
 
-compdef _nixflix_completion nixflix
+compdef _nixflix nixflix
