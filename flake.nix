@@ -12,6 +12,7 @@
       url = "github:ogulcancelik/herdr";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
   };
 
   outputs =
@@ -19,6 +20,7 @@
       nixpkgs,
       home-manager,
       herdr,
+      nix-cachyos-kernel,
       ...
     }:
     let
@@ -34,6 +36,14 @@
         extraSpecialArgs = {
           inherit herdr;
         };
+      };
+
+      nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          ./nixos/configuration.nix
+          { nixpkgs.overlays = [ nix-cachyos-kernel.overlays.pinned ]; }
+        ];
       };
     };
 }

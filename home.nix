@@ -86,10 +86,10 @@
             done
             return 0
           elif [ "$1" = "--verbose" ]; then
-            sudo nixos-rebuild switch && \
+            sudo nixos-rebuild switch --impure --flake ~/dotfiles#nixos && \
             nix run home-manager -- -v init --switch ~/dotfiles
           else
-            log=$(sudo nixos-rebuild switch --quiet 2>&1) || {
+            log=$(sudo nixos-rebuild switch --impure --quiet --flake ~/dotfiles#nixos 2>&1) || {
               echo "$log"
               return 1
             }
