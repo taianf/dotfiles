@@ -52,6 +52,8 @@
         ];
       };
       initContent = ''
+        export PATH="$HOME/dotfiles/bin:$PATH"
+
         # Rebuild both NixOS and Home Manager
         nixup() {
           local log

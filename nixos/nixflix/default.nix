@@ -80,6 +80,10 @@
     jellyfin = {
       enable = true;
       apiKey._secret = config.sops.secrets."jellyfin/api_key".path;
+      network.knownProxies = [
+        "127.0.0.1"
+        "192.168.68.1"
+      ];
       network.enablePublishedServerUriByRequest = true;
       users = {
         admin = {
