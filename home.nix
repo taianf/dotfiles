@@ -126,4 +126,20 @@
     };
   };
 
+  systemd.user.services.ferdium = {
+    Unit = {
+      Description = "Ferdium messaging client";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.ferdium}/bin/ferdium";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+  };
 }
