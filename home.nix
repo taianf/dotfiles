@@ -43,6 +43,13 @@
   };
 
   xdg.configFile = {
+    "autostart/ferdium.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Ferdium
+      Exec=ferdium
+      X-GNOME-Autostart-enabled=true
+    '';
     "cosmic/com.system76.CosmicComp/v1/keyboard_config" = {
       force = true;
       text = ''
