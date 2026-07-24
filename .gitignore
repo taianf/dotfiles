@@ -1,2 +1,4 @@
 *.bak
+secrets/
+secrets-plain.yaml
 node_modules
