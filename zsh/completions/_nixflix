@@ -1,0 +1,7 @@
+#compdef nixflix
+
+_nixflix_completion() {
+  eval $(env _TYPER_COMPLETE_ARGS="${words[1,$CURRENT]}" _NIXFLIX_COMPLETE=complete_zsh nixflix)
+}
+
+compdef _nixflix_completion nixflix
