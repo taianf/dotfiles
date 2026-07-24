@@ -207,6 +207,9 @@ nix flake update
 secrets edit         # opens sops editor
 secrets show         # decrypt and print all secrets
 
+# Restart all nixflix services (after changing passwords)
+nixflix-restart
+
 # Add another machine's key to secrets
 sops updatekeys secrets.yaml
 ```

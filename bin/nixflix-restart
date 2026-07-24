@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+for svc in postgresql nginx sonarr radarr lidarr prowlarr sabnzbd jellyfin seerr; do
+  echo "Restarting $svc..."
+  sudo systemctl restart "$svc.service" 2>/dev/null || echo "  → $svc not found, skipping"
+done
+
+echo "Done."
