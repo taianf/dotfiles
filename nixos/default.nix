@@ -28,7 +28,7 @@
       };
     };
     displayManager = {
-      defaultSession = "plasma";
+      defaultSession = "cosmic";
       cosmic-greeter.enable = true;
     };
     desktopManager = {
