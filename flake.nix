@@ -15,35 +15,32 @@
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
   };
 
-  outputs =
-    {
-      nixpkgs,
-      home-manager,
-      herdr,
-      nix-cachyos-kernel,
-      ...
-    }:
-    let
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-    in
-    {
-      homeConfigurations."taian" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
+  outputs = {
+    nixpkgs,
+    home-manager,
+    herdr,
+    nix-cachyos-kernel,
+    ...
+  }: let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+  in {
+    homeConfigurations."taian" = home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
 
-        modules = [ ./home.nix ];
+      modules = [./home.nix];
 
-        extraSpecialArgs = {
-          inherit herdr;
-        };
-      };
-
-      nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-        inherit system;
-        modules = [
-          ./nixos/configuration.nix
-          { nixpkgs.overlays = [ nix-cachyos-kernel.overlays.pinned ]; }
-        ];
+      extraSpecialArgs = {
+        inherit herdr;
       };
     };
+
+    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        ./nixos/configuration.nix
+        {nixpkgs.overlays = [nix-cachyos-kernel.overlays.pinned];}
+      ];
+    };
+  };
 }

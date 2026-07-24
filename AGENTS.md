@@ -34,6 +34,28 @@ This repo manages both **NixOS** (system) and **Home Manager** (user) configurat
 - Default shell is set via `users.users.<name>.shell = pkgs.zsh` in NixOS
   and `programs.zsh.enable = true` in both NixOS and Home Manager.
 
+### Branching
+
+- **Never commit to `main`** — a pre-commit hook (`no-commit-to-branch`) blocks it.
+- Always create a feature branch, push, and open a PR.
+- Use `git checkout -b <branch-name>` to start a new branch.
+
+### Worktrees
+
+- **Always work in a git worktree** to avoid conflicting with parallel agents.
+  Create one from `main` on each session:
+
+  ```bash
+  git worktree add -b <branch-name> /tmp/opencode/<branch-name> main
+  ```
+
+  Work inside `/tmp/opencode/<branch-name>` and commit/push from there.
+  Clean up when done:
+
+  ```bash
+  git worktree remove /tmp/opencode/<branch-name> && git branch -D <branch-name>
+  ```
+
 ### Git / dotfiles sync
 
 - Use `git -C <path>` for regular repos. `--git-dir` / `--work-tree` is for bare repos.

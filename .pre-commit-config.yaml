@@ -10,12 +10,23 @@ repos:
         args: ["--branch", "main"]
       - id: detect-private-key
 
-  - repo: https://github.com/fidgetingbits/pre-commit-statix
-    rev: v1.0.0
+  - repo: local
     hooks:
       - id: statix-check
+        name: statix check
+        language: rust
+        additional_dependencies: ["cli:statix"]
+        entry: statix
+        args: [check]
+        types_or: [nix]
         exclude: '\.agents/'
       - id: statix-fix
+        name: statix fix
+        language: rust
+        additional_dependencies: ["cli:statix"]
+        entry: statix
+        args: [fix]
+        types_or: [nix]
         exclude: '\.agents/'
 
   - repo: https://github.com/adrienverge/yamllint
