@@ -1,4 +1,16 @@
+# Backups
 *.bak
+
+# Secrets
 secrets/
 secrets-plain.yaml
+
+# Python
+__pycache__
+.venv
+*.egg-info
+dist
+build
+
+# Node
 node_modules
