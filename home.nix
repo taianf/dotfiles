@@ -27,6 +27,7 @@
         uv
         wget
         zed-editor
+        ferdium
       ]
       ++ [
         herdr.packages.${system}.default
@@ -40,6 +41,7 @@
     };
     opencode.enable = true;
     gh.enable = true;
+    topgrade.enable = true;
 
     zsh = {
       enable = true;
