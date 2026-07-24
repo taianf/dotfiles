@@ -63,9 +63,23 @@ def secrets(action: str = typer.Argument("edit", help="edit or show")):
 
 
 def setup_dirs_impl():
-    print("Creating jellyfin directories...")
-    run(f"sudo mkdir -p {STATE}/jellyfin/{{config,cache,log,data}}")
-    run(f"sudo chown -R jellyfin:media {STATE}/jellyfin")
+    print("Creating state directories...")
+    dirs = {
+        "jellyfin": ("jellyfin", "media", "{config,cache,log,data}"),
+        "sonarr": ("sonarr", "media", ""),
+        "radarr": ("radarr", "media", ""),
+        "lidarr": ("lidarr", "media", ""),
+        "prowlarr": ("prowlarr", "prowlarr", ""),
+        "seerr": ("seerr", "seerr", ""),
+    }
+    for name, (user, group, subdirs) in dirs.items():
+        path = f"{STATE}/{name}"
+        if subdirs:
+            run(f"sudo mkdir -p {path}/{subdirs}")
+            run(f"sudo chown -R {user}:{group} {path}")
+        else:
+            run(f"sudo mkdir -p {path}")
+            run(f"sudo chown {user}:{group} {path}")
     print("Done.")
 
 
