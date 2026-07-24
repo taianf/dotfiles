@@ -55,7 +55,7 @@ def full_refresh():
 
     print("\n=== Step 2: Rebuild system ===")
     log = subprocess.run(
-        "sudo nixos-rebuild switch --quiet",
+        "sudo nixos-rebuild switch --impure --quiet --flake ~/dotfiles#nixos",
         capture_output=True,
         text=True,
         shell=True,

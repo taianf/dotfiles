@@ -186,6 +186,7 @@ with lib;
         "network-online.target"
       ];
       requires = [ "bazarr.service" ];
+      wants = [ "network-online.target" ];
       wantedBy = [ "multi-user.target" ];
 
       serviceConfig = {
@@ -193,12 +194,15 @@ with lib;
         RemainAfterExit = true;
         User = "bazarr";
         Group = config.services.bazarr.group;
+        Restart = "on-failure";
+        RestartSec = "10s";
       };
 
       script =
         let
           apiKeyFile = config.sops.secrets."bazarr/api_key".path;
           port = toString config.services.bazarr.listenPort;
+          curl = "${pkgs.curl.bin}/bin/curl";
         in
         ''
           set -eu
@@ -207,12 +211,12 @@ with lib;
           BASE_URL="http://127.0.0.1:${port}"
 
           echo "Waiting for Bazarr API..."
-          for i in $(seq 1 30); do
-            if curl -sf "$BASE_URL/api/system/settings" -H "X-Api-Key: $API_KEY" > /dev/null 2>&1; then
+          for i in $(seq 1 60); do
+            if ${curl} -sf "$BASE_URL/api/system/settings" -H "X-Api-Key: $API_KEY" > /dev/null 2>&1; then
               echo "Bazarr API ready"
               break
             fi
-            if [ "$i" -eq 30 ]; then
+            if [ "$i" -eq 60 ]; then
               echo "Timed out waiting for Bazarr"
               exit 1
             fi
@@ -220,17 +224,17 @@ with lib;
           done
 
           echo "Enabling Portuguese..."
-          curl -sf -X POST "$BASE_URL/api/system/settings" \
+          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
             -H "X-Api-Key: $API_KEY" \
             -d "languages-enabled=pt" > /dev/null
 
           echo "Enabling English..."
-          curl -sf -X POST "$BASE_URL/api/system/settings" \
+          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
             -H "X-Api-Key: $API_KEY" \
             -d "languages-enabled=en" > /dev/null
 
           echo "Creating language profile..."
-          curl -sf -X POST "$BASE_URL/api/system/settings" \
+          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
             -H "X-Api-Key: $API_KEY" \
             -d 'languages-profiles=[{"profileId":1,"name":"Portuguese + English","cutoff":"pt","items":[{"language":"pt","audio_exclude":false,"forced":false,"hi":false},{"language":"en","audio_exclude":false,"forced":false,"hi":false}],"mustContain":"","mustNotContain":"","originalFormat":null,"tag":""}]' > /dev/null
 
