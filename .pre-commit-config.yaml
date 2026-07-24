@@ -1,4 +1,7 @@
 ---
+ci:
+  skip: [nixfmt]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -39,12 +42,6 @@ repos:
       - id: markdownlint
         exclude: '\.agents/'
 
-  - repo: https://github.com/kamadorueda/alejandra
-    rev: v4.0.0
-    hooks:
-      - id: alejandra
-        exclude: '\.agents/'
-
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:
@@ -72,3 +69,12 @@ repos:
       - id: mypy
         additional_dependencies: [typer]
         args: [--no-strict-optional, --ignore-missing-imports]
+
+  - repo: local
+    hooks:
+      - id: nixfmt
+        name: nixfmt
+        entry: docker run --rm -v {cwd}:/src --workdir /src pre-commit nixfmt
+        language: system
+        types: [nix]
+        exclude: '\.agents/'
