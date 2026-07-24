@@ -56,6 +56,7 @@
     opencode.enable = true;
     gh.enable = true;
     topgrade.enable = true;
+    spotify-player.enable = true;
 
     zsh = {
       enable = true;
