@@ -74,6 +74,18 @@
         source $HOME/dotfiles/zsh/completions/_nixflix 2>/dev/null
         eval "$(COMPLETE=zsh prek)"
 
+        # Docker → Podman compatibility
+        alias docker='podman'
+        alias docker-compose='podman-compose'
+        docker() {
+          if [ "$1" = "compose" ]; then
+            shift
+            command podman compose "$@"
+          else
+            command podman "$@"
+          fi
+        }
+
         # Rebuild both NixOS and Home Manager
         nixup() {
           local log
@@ -126,4 +138,20 @@
     };
   };
 
+  systemd.user.services.ferdium = {
+    Unit = {
+      Description = "Ferdium messaging client";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.ferdium}/bin/ferdium";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+  };
 }

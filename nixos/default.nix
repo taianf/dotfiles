@@ -74,6 +74,12 @@
   # Enable all terminfo entries
   environment.enableAllTerminfo = true;
 
+  # Container runtime
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+  };
+
   # User account
   users.users."taian" = {
     isNormalUser = true;
