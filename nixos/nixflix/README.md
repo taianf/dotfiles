@@ -22,6 +22,7 @@ All API keys and passwords are managed via **sops-nix** and stored encrypted in 
 | Jellyfin    | API key        | `jellyfin/api_key`        |
 | Jellyfin    | Admin password | `jellyfin/admin_password` |
 | Seerr       | API key        | `seerr/api_key`           |
+| Bazarr      | API key        | `bazarr/api_key`          |
 
 ### Editing secrets
 
@@ -69,9 +70,10 @@ Created automatically on first rebuild:
 | Radarr      | `http://radarr.nixflix`      | `http://localhost:7878` |
 | Lidarr      | `http://lidarr.nixflix`      | `http://localhost:8686` |
 | Prowlarr    | `http://prowlarr.nixflix`    | `http://localhost:9696` |
-| qBittorrent | `http://qbittorrent.nixflix` | `http://localhost:8282` |
+| qBittorrent | `http://qbittorrent.nixflix` | `http://localhost:8080` |
 | Jellyfin    | `http://jellyfin.nixflix`    | `http://localhost:8096` |
 | Seerr       | `http://seerr.nixflix`       | `http://localhost:5055` |
+| Bazarr      | `http://bazarr.nixflix`      | `http://localhost:6767` |
 
 ## Resources
 
