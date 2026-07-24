@@ -77,6 +77,13 @@ with lib;
     torrentClients.qbittorrent = {
       enable = true;
       password._secret = config.sops.secrets."qbittorrent/password".path;
+      serverConfig = {
+        LegalNotice.Accepted = true;
+        Preferences.WebUI = {
+          Username = "admin";
+          Password_PBKDF2 = "@ByteArray(YWRtaW4==:Lki2TfJQMX2GUP8t6S4sNyLao1XTg/XdkbcsX1ht5UVHybIkvTm6L+TB9tZ2xt8xRy9iW8quaraTOweXb495rg==)";
+        };
+      };
     };
 
     jellyfin = {
