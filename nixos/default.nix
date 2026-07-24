@@ -1,7 +1,5 @@
 # Shared NixOS configuration — import this from any machine's configuration.nix
-{ pkgs, ... }:
-
-{
+{pkgs, ...}: {
   # Locale & timezone
   time.timeZone = "Europe/Lisbon";
   i18n.defaultLocale = "en_US.UTF-8";
