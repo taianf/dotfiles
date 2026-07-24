@@ -3,7 +3,8 @@
   pkgs,
   herdr,
   ...
-}: {
+}:
+{
   nixpkgs.config.allowUnfree = true;
 
   home = {
@@ -11,12 +12,13 @@
     homeDirectory = "/home/taian";
     username = "taian";
 
-    packages = with pkgs;
+    packages =
+      with pkgs;
       [
         (pkgs.symlinkJoin {
           name = "ferdium-wrapped";
-          paths = [pkgs.ferdium];
-          buildInputs = [pkgs.makeWrapper];
+          paths = [ pkgs.ferdium ];
+          buildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             wrapProgram $out/bin/ferdium \
               --add-flags "--enable-features=UseOzonePlatform,WaylandWindowDecorations" \
@@ -121,10 +123,10 @@
   systemd.user.services.dotfiles-sync = {
     Unit = {
       Description = "Sync dotfiles from Git";
-      After = ["network-online.target"];
+      After = [ "network-online.target" ];
     };
     Install = {
-      WantedBy = ["default.target"];
+      WantedBy = [ "default.target" ];
     };
     Service = {
       Type = "oneshot";
