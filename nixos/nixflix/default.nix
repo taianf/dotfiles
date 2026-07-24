@@ -112,6 +112,17 @@ with lib;
       enable = true;
       apiKey._secret = config.sops.secrets."seerr/api_key".path;
     };
+
+    # TRaSH quality profiles via Recyclarr — syncs community-tested profiles
+    # See: https://trash-guides.info
+    recyclarr = {
+      enable = true;
+      # Selects profiles that prioritize acquisition over quality
+      radarrQuality = "1080p";
+      sonarrQuality = "1080p";
+      # Automatically remove unmanaged quality profiles
+      cleanupUnmanagedProfiles.enable = false;
+    };
   };
 
   services.bazarr = {
