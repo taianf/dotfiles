@@ -61,6 +61,7 @@
       };
       initContent = ''
         export PATH="$HOME/dotfiles/bin:$PATH"
+        source $HOME/dotfiles/zsh/completions/_nixflix 2>/dev/null
         eval "$(COMPLETE=zsh prek)"
 
         # Rebuild both NixOS and Home Manager

@@ -1,5 +1,7 @@
 import os
 import subprocess
+import sys
+from pathlib import Path
 
 import typer
 
@@ -42,7 +44,10 @@ CONFIG_SERVICES = [
     "prowlarr-config",
     "prowlarr-setup-logs-db",
     "prowlarr-tags",
+    "jellyfin-api-key",
     "jellyfin-setup-wizard",
+    "jellyfin-metadata-config",
+    "jellyfin-system-config",
     "seerr-env",
 ]
 
