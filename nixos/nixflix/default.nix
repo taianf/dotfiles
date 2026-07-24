@@ -73,7 +73,6 @@ with lib;
           { name = "TorrentGalaxy"; }
           { name = "YTS"; }
           { name = "LimeTorrents"; }
-          { name = "Nzbl"; }
         ];
       };
     };
@@ -113,12 +112,18 @@ with lib;
     };
   };
 
-  # Seerr needs namespace access for Node.js runtime
-  systemd.services.seerr.serviceConfig.RestrictNamespaces = mkForce false;
-  # Ensure data dir exists before starting -- tmpfiles doesn't always re-run on nixup
-  systemd.services.seerr.serviceConfig.ExecStartPre =
-    let
-      dataDir = config.nixflix.seerr.dataDir or "/data/.state/seerr";
-    in
-    lib.mkBefore "${pkgs.coreutils}/bin/mkdir -p ${dataDir}";
+  systemd.services = {
+    # Disable non-essential setup services that fail on nixup
+    prowlarr-indexers.enable = mkForce false;
+    seerr-setup.enable = mkForce false;
+    # Seerr overrides
+    seerr = {
+      serviceConfig.RestrictNamespaces = mkForce false;
+      serviceConfig.ExecStartPre =
+        let
+          dataDir = config.nixflix.seerr.dataDir or "/data/.state/seerr";
+        in
+        lib.mkBefore "${pkgs.coreutils}/bin/mkdir -p ${dataDir}";
+    };
+  };
 }
