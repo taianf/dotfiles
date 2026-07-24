@@ -32,6 +32,30 @@ def restart():
     print("Done.")
 
 
+CONFIG_SERVICES = [
+    "sonarr-config",
+    "sonarr-setup-logs-db",
+    "radarr-config",
+    "radarr-setup-logs-db",
+    "lidarr-config",
+    "lidarr-setup-logs-db",
+    "prowlarr-config",
+    "prowlarr-setup-logs-db",
+    "prowlarr-tags",
+    "jellyfin-setup-wizard",
+    "seerr-env",
+]
+
+
+@app.command()
+def refresh():
+    """Re-run config oneshot services (needed after nixflix clean + nixup)"""
+    print("Restarting config services...")
+    for svc in CONFIG_SERVICES:
+        run(f"sudo systemctl restart {svc}.service 2>/dev/null || true")
+    print("Done.")
+
+
 @app.command()
 def clean():
     """Wipe all state data and recreate dirs"""
@@ -41,7 +65,41 @@ def clean():
     print("Removing all state data...")
     run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr}}")
     setup_dirs_impl()
-    print("Done. Run: nixup")
+    print("Done. Run: nixflix full-refresh")
+
+
+@app.command()
+def full_refresh():
+    """Clean state, rebuild system, re-apply config — all in one"""
+    print("=== Step 1: Clean state ===")
+    for svc in SERVICES:
+        run(f"sudo systemctl stop {svc}.service 2>/dev/null || true")
+    run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr}}")
+    setup_dirs_impl()
+
+    print("\n=== Step 2: Rebuild system ===")
+    log = subprocess.run(
+        "sudo nixos-rebuild switch --quiet", capture_output=True, text=True, shell=True
+    )
+    if log.returncode != 0:
+        print(log.stdout + log.stderr)
+        raise SystemExit(1)
+
+    log = subprocess.run(
+        "nix run home-manager -- init --switch ~/dotfiles",
+        capture_output=True,
+        text=True,
+        shell=True,
+    )
+    if log.returncode != 0:
+        print(log.stdout + log.stderr)
+        raise SystemExit(1)
+
+    print("\n=== Step 3: Re-apply config services ===")
+    for svc in CONFIG_SERVICES:
+        run(f"sudo systemctl restart {svc}.service 2>/dev/null || true")
+
+    print("\nDone.")
 
 
 @app.command()
