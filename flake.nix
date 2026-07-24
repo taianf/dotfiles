@@ -28,6 +28,8 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
+      formatter.${system} = pkgs.nixfmt-rfc-style;
+
       homeConfigurations."taian" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
