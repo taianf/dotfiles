@@ -39,6 +39,7 @@ This repo manages both **NixOS** (system) and **Home Manager** (user) configurat
 - **Never commit to `main`** — a pre-commit hook (`no-commit-to-branch`) blocks it.
 - Always create a feature branch, push, and open a PR.
 - Use `git checkout -b <branch-name>` to start a new branch.
+- **Never merge PRs** — open the PR and let the user review and merge it.
 
 ### Worktrees
 
