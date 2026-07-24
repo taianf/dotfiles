@@ -1,7 +1,5 @@
 # Shared NixOS configuration — import this from any machine's configuration.nix
-{ pkgs, ... }:
-
-{
+{pkgs, ...}: {
   # Locale & timezone
   time.timeZone = "Europe/Lisbon";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -73,6 +71,12 @@
 
   # Enable all terminfo entries
   environment.enableAllTerminfo = true;
+
+  # Container runtime
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+  };
 
   # User account
   users.users."taian" = {
