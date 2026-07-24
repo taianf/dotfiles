@@ -61,6 +61,7 @@
       };
       initContent = ''
         export PATH="$HOME/dotfiles/bin:$PATH"
+        eval "$(COMPLETE=zsh prek)"
 
         # Rebuild both NixOS and Home Manager
         nixup() {
