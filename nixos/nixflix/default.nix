@@ -74,8 +74,6 @@ with lib;
           { name = "YTS"; }
           { name = "LimeTorrents"; }
           { name = "Nzbl"; }
-          { name = "SimplyNZBs"; }
-          { name = "NZBIndex"; }
         ];
       };
     };
