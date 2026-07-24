@@ -38,10 +38,10 @@ repos:
       - id: markdownlint
         exclude: '\.agents/'
 
-  - repo: https://github.com/kamadorueda/alejandra
-    rev: 4.0.0
+  - repo: https://github.com/NixOS/nixfmt
+    rev: v1.4.0
     hooks:
-      - id: alejandra
+      - id: nixfmt-nix
         exclude: '\.agents/'
 
   - repo: https://github.com/pre-commit/mirrors-prettier
