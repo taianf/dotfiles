@@ -21,6 +21,7 @@
         google-chrome
         nil
         nixd
+        prek
         nixfmt
         python3
         sops
