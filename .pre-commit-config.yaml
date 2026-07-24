@@ -1,6 +1,6 @@
 ---
 ci:
-  skip: [nixfmt]
+  skip: [nixfmt-nix, statix-check, statix-fix]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -10,25 +10,13 @@ repos:
         args: ["--branch", "main"]
       - id: detect-private-key
 
-  - repo: local
+  - repo: https://github.com/fidgetingbits/pre-commit-statix
+    rev: v1.0.0
     hooks:
       - id: statix-check
-        name: Statix Check
-        entry: statix
-        language: rust
-        additional_dependencies: ["cli:statix"]
-        types: [nix]
-        pass_filenames: false
-        exclude: "\\.agents/"
+        exclude: '\.agents/'
       - id: statix-fix
-        name: Statix Fix
-        entry: statix
-        args: ["--fix"]
-        language: rust
-        additional_dependencies: ["cli:statix"]
-        types: [nix]
-        pass_filenames: false
-        exclude: "\\.agents/"
+        exclude: '\.agents/'
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
@@ -40,6 +28,12 @@ repos:
     rev: v0.49.1
     hooks:
       - id: markdownlint
+        exclude: '\.agents/'
+
+  - repo: https://github.com/NixOS/nixfmt
+    rev: v1.4.0
+    hooks:
+      - id: nixfmt-nix
         exclude: '\.agents/'
 
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -69,12 +63,3 @@ repos:
       - id: mypy
         additional_dependencies: [typer]
         args: [--no-strict-optional, --ignore-missing-imports]
-
-  - repo: local
-    hooks:
-      - id: nixfmt
-        name: nixfmt
-        entry: docker run --rm -v {cwd}:/src --workdir /src pre-commit nixfmt
-        language: system
-        types: [nix]
-        exclude: '\.agents/'
