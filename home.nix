@@ -34,6 +34,12 @@
       ];
   };
 
+  xdg.configFile = {
+    "zed/settings.json".source = ./config/zed/settings.json;
+    "topgrade.toml".source = ./config/topgrade.toml;
+    "opencode/opencode.json".source = ./config/opencode/opencode.json;
+  };
+
   programs = {
     ghostty = {
       enable = true;
