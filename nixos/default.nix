@@ -64,10 +64,15 @@
   environment.systemPackages = with pkgs; [
     ddcutil
     ddcui
+    wl-clipboard
+    xclip
   ];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
+
+  # Enable all terminfo entries
+  environment.enableAllTerminfo = true;
 
   # User account
   users.users."taian" = {
