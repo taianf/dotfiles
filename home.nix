@@ -17,7 +17,16 @@
     packages =
       with pkgs;
       [
-        ferdium
+        (pkgs.symlinkJoin {
+          name = "ferdium-wrapped";
+          paths = [ pkgs.ferdium ];
+          buildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            wrapProgram $out/bin/ferdium \
+              --add-flags "--enable-features=UseOzonePlatform,WaylandWindowDecorations" \
+              --add-flags "--ozone-platform=wayland"
+          '';
+        })
         google-chrome
         nil
         nixd

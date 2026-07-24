@@ -38,6 +38,7 @@
       cosmic.enable = true;
       plasma6.enable = true;
     };
+    system76-scheduler.enable = true;
     pulseaudio.enable = false;
     pipewire = {
       enable = true;
