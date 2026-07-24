@@ -62,6 +62,16 @@
       config = {
         apiKey._secret = config.sops.secrets."prowlarr/api_key".path;
         hostConfig.password._secret = config.sops.secrets."prowlarr/password".path;
+        indexers = [
+          { name = "The Pirate Bay"; }
+          { name = "1337x"; }
+          { name = "TorrentGalaxy"; }
+          { name = "YTS"; }
+          { name = "LimeTorrents"; }
+          { name = "Nzbl"; }
+          { name = "SimplyNZBs"; }
+          { name = "NZBIndex"; }
+        ];
       };
     };
 

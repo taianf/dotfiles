@@ -3,9 +3,9 @@
 _:
 
 let
-  sops-nix = builtins.fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
-  nixflix = builtins.fetchTarball "https://github.com/kiriwalawren/nixflix/archive/master.tar.gz";
-  vpn-confinement = builtins.fetchTarball "https://github.com/Maroka-chan/VPN-Confinement/archive/master.tar.gz";
+  sops-nix = fetchTarball "https://github.com/Mic92/sops-nix/archive/master.tar.gz";
+  nixflix = fetchTarball "https://github.com/kiriwalawren/nixflix/archive/master.tar.gz";
+  vpn-confinement = fetchTarball "https://github.com/Maroka-chan/VPN-Confinement/archive/master.tar.gz";
 in
 {
   imports = [
