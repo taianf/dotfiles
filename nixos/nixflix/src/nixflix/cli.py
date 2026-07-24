@@ -15,7 +15,7 @@ SERVICES = [
     "radarr",
     "lidarr",
     "prowlarr",
-    "sabnzbd",
+    "qbittorrent",
     "jellyfin",
     "seerr",
 ]

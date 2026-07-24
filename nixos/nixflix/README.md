@@ -1,6 +1,6 @@
 # Nixflix Setup
 
-Media server stack: Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd, Jellyfin, Seerr.
+Media server stack: Sonarr, Radarr, Lidarr, Prowlarr, qBittorrent, Jellyfin, Seerr.
 
 ## Secrets
 
@@ -8,23 +8,20 @@ All API keys and passwords are managed via **sops-nix** and stored encrypted in 
 
 ### Required secrets
 
-| Service  | Key            | Path in secrets.yaml      |
-| -------- | -------------- | ------------------------- |
-| Sonarr   | API key        | `sonarr/api_key`          |
-| Sonarr   | Password       | `sonarr/password`         |
-| Radarr   | API key        | `radarr/api_key`          |
-| Radarr   | Password       | `radarr/password`         |
-| Lidarr   | API key        | `lidarr/api_key`          |
-| Lidarr   | Password       | `lidarr/password`         |
-| Prowlarr | API key        | `prowlarr/api_key`        |
-| Prowlarr | Password       | `prowlarr/password`       |
-| SABnzbd  | API key        | `sabnzbd/api_key`         |
-| SABnzbd  | NZB key        | `sabnzbd/nzb_key`         |
-| SABnzbd  | Username       | `sabnzbd/username`        |
-| SABnzbd  | Password       | `sabnzbd/password`        |
-| Jellyfin | API key        | `jellyfin/api_key`        |
-| Jellyfin | Admin password | `jellyfin/admin_password` |
-| Seerr    | API key        | `seerr/api_key`           |
+| Service     | Key            | Path in secrets.yaml      |
+| ----------- | -------------- | ------------------------- |
+| Sonarr      | API key        | `sonarr/api_key`          |
+| Sonarr      | Password       | `sonarr/password`         |
+| Radarr      | API key        | `radarr/api_key`          |
+| Radarr      | Password       | `radarr/password`         |
+| Lidarr      | API key        | `lidarr/api_key`          |
+| Lidarr      | Password       | `lidarr/password`         |
+| Prowlarr    | API key        | `prowlarr/api_key`        |
+| Prowlarr    | Password       | `prowlarr/password`       |
+| qBittorrent | Password       | `qbittorrent/password`    |
+| Jellyfin    | API key        | `jellyfin/api_key`        |
+| Jellyfin    | Admin password | `jellyfin/admin_password` |
+| Seerr       | API key        | `seerr/api_key`           |
 
 ### Editing secrets
 
@@ -60,21 +57,21 @@ Created automatically on first rebuild:
 │   ├── tv/           # Sonarr → Jellyfin "Shows"
 │   ├── music/        # Lidarr → Jellyfin "Music"
 │   └── anime/        # Sonarr Anime → Jellyfin "Shows"
-├── downloads/        # SABnzbd downloads
+├── downloads/        # qBittorrent downloads
 └── .state/           # Service state ( databases, configs )
 ```
 
 ## Service access
 
-| Service  | Reverse proxy             | Direct                  |
-| -------- | ------------------------- | ----------------------- |
-| Sonarr   | `http://sonarr.nixflix`   | `http://localhost:8989` |
-| Radarr   | `http://radarr.nixflix`   | `http://localhost:7878` |
-| Lidarr   | `http://lidarr.nixflix`   | `http://localhost:8686` |
-| Prowlarr | `http://prowlarr.nixflix` | `http://localhost:9696` |
-| SABnzbd  | `http://sabnzbd.nixflix`  | `http://localhost:8080` |
-| Jellyfin | `http://jellyfin.nixflix` | `http://localhost:8096` |
-| Seerr    | `http://seerr.nixflix`    | `http://localhost:5055` |
+| Service     | Reverse proxy                | Direct                  |
+| ----------- | ---------------------------- | ----------------------- |
+| Sonarr      | `http://sonarr.nixflix`      | `http://localhost:8989` |
+| Radarr      | `http://radarr.nixflix`      | `http://localhost:7878` |
+| Lidarr      | `http://lidarr.nixflix`      | `http://localhost:8686` |
+| Prowlarr    | `http://prowlarr.nixflix`    | `http://localhost:9696` |
+| qBittorrent | `http://qbittorrent.nixflix` | `http://localhost:8282` |
+| Jellyfin    | `http://jellyfin.nixflix`    | `http://localhost:8096` |
+| Seerr       | `http://seerr.nixflix`       | `http://localhost:5055` |
 
 ## Resources
 

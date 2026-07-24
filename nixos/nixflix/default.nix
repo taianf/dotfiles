@@ -16,10 +16,7 @@ with lib;
     "lidarr/password" = { };
     "prowlarr/api_key" = { };
     "prowlarr/password" = { };
-    "sabnzbd/api_key" = { };
-    "sabnzbd/nzb_key" = { };
-    "sabnzbd/username" = { };
-    "sabnzbd/password" = { };
+    "qbittorrent/password" = { };
     "jellyfin/api_key" = { };
     "jellyfin/admin_password" = { };
     "seerr/api_key" = { };
@@ -77,16 +74,9 @@ with lib;
       };
     };
 
-    usenetClients.sabnzbd = {
+    torrentClients.qbittorrent = {
       enable = true;
-      settings = {
-        misc = {
-          api_key._secret = config.sops.secrets."sabnzbd/api_key".path;
-          nzb_key._secret = config.sops.secrets."sabnzbd/nzb_key".path;
-          username._secret = config.sops.secrets."sabnzbd/username".path;
-          password._secret = config.sops.secrets."sabnzbd/password".path;
-        };
-      };
+      password._secret = config.sops.secrets."qbittorrent/password".path;
     };
 
     jellyfin = {
