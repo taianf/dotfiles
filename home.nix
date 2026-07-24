@@ -73,8 +73,6 @@
         eval "$(COMPLETE=zsh prek)"
 
         # Docker → Podman compatibility
-        alias docker='podman'
-        alias docker-compose='podman-compose'
         docker() {
           if [ "$1" = "compose" ]; then
             shift
