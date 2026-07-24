@@ -17,16 +17,17 @@
     packages =
       with pkgs;
       [
+        ferdium
         google-chrome
         nil
         nixd
         nixfmt
+        python3
         sops
         statix
         uv
         wget
         zed-editor
-        ferdium
       ]
       ++ [
         herdr.packages.${system}.default

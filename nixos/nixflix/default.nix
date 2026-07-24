@@ -1,6 +1,6 @@
 # Nixflix — media server stack (Sonarr, Radarr, Jellyfin, etc.)
-{ config, ... }:
-
+{ config, lib, ... }:
+with lib;
 {
   sops.secrets = {
     "sonarr/api_key" = { };
@@ -109,4 +109,7 @@
       apiKey._secret = config.sops.secrets."seerr/api_key".path;
     };
   };
+
+  # Seerr needs namespace access for Node.js runtime
+  systemd.services.seerr.serviceConfig.RestrictNamespaces = mkForce false;
 }
