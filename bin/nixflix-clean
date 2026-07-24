@@ -14,4 +14,9 @@ sudo rm -rf /data/.state/lidarr
 sudo rm -rf /data/.state/prowlarr
 sudo rm -rf /data/.state/seerr
 
+echo "Recreating directories..."
+sudo mkdir -p /data/.state
+sudo mkdir -p /data/.state/jellyfin/config /data/.state/jellyfin/cache /data/.state/jellyfin/log /data/.state/jellyfin/data
+sudo chown -R jellyfin:media /data/.state/jellyfin
+
 echo "Done. Run nixup to recreate everything fresh."
