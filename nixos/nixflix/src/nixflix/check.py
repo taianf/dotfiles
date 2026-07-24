@@ -9,6 +9,8 @@ from urllib.request import Request
 from urllib.request import urlopen
 
 SECRETS_DIR = "/run/secrets"
+BAZARR_MIN_SCORE = 90
+BAZARR_PP_THRESHOLD = 90
 SERVICES = [
     "postgresql",
     "nginx",
@@ -434,6 +436,25 @@ def _check_bazarr_config():
         "no providers enabled"
     )
     c.children.append(bpr)
+
+    bq = _Check("Bazarr quality settings (score threshold)")
+    general = bc_data.get("general", {})
+    min_score = general.get("minimum_score", 0)
+    min_score_ok = min_score >= BAZARR_MIN_SCORE
+    bq.ok(f"minimum_score={min_score}") if min_score_ok else bq.fail(
+        f"minimum_score={min_score} (recommended ≥ {BAZARR_MIN_SCORE})"
+    )
+    c.children.append(bq)
+
+    bpst = _Check("Bazarr subtitle sync enabled")
+    use_pp = general.get("use_postprocessing", False)
+    pp_threshold = general.get("postprocessing_threshold", 0)
+    bpst.ok(
+        f"post_processing={use_pp}, threshold={pp_threshold}"
+    ) if use_pp and pp_threshold >= BAZARR_PP_THRESHOLD else bpst.fail(
+        f"post_processing={use_pp}, threshold={pp_threshold}"
+    )
+    c.children.append(bpst)
 
     c.ok() if all(x.passed for x in c.children) else c.fail(
         "some Bazarr config items are missing"
