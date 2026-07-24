@@ -1,33 +1,17 @@
-import os
 import subprocess
 import sys
 
 import typer
 
 from .check import run_checks
+from .commons import CONFIG_SERVICES
+from .commons import SERVICES
+from .commons import SOPS_FILE
+from .commons import STATE
+from .commons import run
+from .commons import setup_dirs
 
 app = typer.Typer()
-STATE = "/data/.state"
-SOPS_FILE = os.path.expanduser("~/dotfiles/secrets.yaml")
-SERVICES = [
-    "postgresql",
-    "nginx",
-    "sonarr",
-    "radarr",
-    "lidarr",
-    "prowlarr",
-    "qbittorrent",
-    "jellyfin",
-    "seerr",
-    "bazarr",
-]
-
-
-def run(cmd: str):
-    subprocess.run(cmd, shell=True, check=False)
-
-
-# ── CLI commands ──────────────────────────────────────────────────
 
 
 @app.command()
@@ -37,24 +21,6 @@ def restart():
         print(f"Restarting {svc}...")
         run(f"sudo systemctl restart {svc}.service 2>/dev/null || true")
     print("Done.")
-
-
-CONFIG_SERVICES = [
-    "sonarr-config",
-    "sonarr-setup-logs-db",
-    "radarr-config",
-    "radarr-setup-logs-db",
-    "lidarr-config",
-    "lidarr-setup-logs-db",
-    "prowlarr-config",
-    "prowlarr-setup-logs-db",
-    "prowlarr-tags",
-    "jellyfin-api-key",
-    "jellyfin-setup-wizard",
-    "jellyfin-metadata-config",
-    "jellyfin-system-config",
-    "seerr-env",
-]
 
 
 @app.command()
@@ -74,7 +40,7 @@ def clean():
         run(f"sudo systemctl stop {svc}.service 2>/dev/null || true")
     print("Removing all state data...")
     run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr}}")
-    _setup_dirs()
+    setup_dirs()
     print("Done. Run: nixflix full-refresh")
 
 
@@ -85,7 +51,7 @@ def full_refresh():
     for svc in SERVICES:
         run(f"sudo systemctl stop {svc}.service 2>/dev/null || true")
     run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr}}")
-    _setup_dirs()
+    setup_dirs()
 
     print("\n=== Step 2: Rebuild system ===")
     log = subprocess.run(
@@ -119,7 +85,7 @@ def full_refresh():
 @app.command()
 def setup():
     """Recreate jellyfin directories"""
-    _setup_dirs()
+    setup_dirs()
     print("Done. Run: nixup")
 
 
@@ -138,27 +104,6 @@ def secrets(action: str = typer.Argument("edit", help="edit or show")):
 def check():
     """Check all services health, API connectivity, and cross-service integration"""
     sys.exit(run_checks())
-
-
-def _setup_dirs():
-    print("Creating state directories...")
-    dirs = {
-        "jellyfin": ("jellyfin", "media", "{config,cache,log,data}"),
-        "sonarr": ("sonarr", "media", ""),
-        "radarr": ("radarr", "media", ""),
-        "lidarr": ("lidarr", "media", ""),
-        "prowlarr": ("prowlarr", "prowlarr", ""),
-        "seerr": ("seerr", "seerr", ""),
-    }
-    for name, (user, group, subdirs) in dirs.items():
-        path = f"{STATE}/{name}"
-        if subdirs:
-            run(f"sudo mkdir -p {path}/{subdirs}")
-            run(f"sudo chown -R {user}:{group} {path}")
-        else:
-            run(f"sudo mkdir -p {path}")
-            run(f"sudo chown {user}:{group} {path}")
-    print("Done.")
 
 
 def main():
