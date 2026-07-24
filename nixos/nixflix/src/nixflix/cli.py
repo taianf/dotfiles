@@ -5,6 +5,8 @@ from pathlib import Path
 
 import typer
 
+from .check import run_check
+
 app = typer.Typer()
 STATE = "/data/.state"
 SOPS_FILE = os.path.expanduser("~/dotfiles/secrets.yaml")
@@ -18,6 +20,7 @@ SERVICES = [
     "qbittorrent",
     "jellyfin",
     "seerr",
+    "bazarr",
 ]
 
 
@@ -123,6 +126,12 @@ def secrets(action: str = typer.Argument("edit", help="edit or show")):
         run(f"sops --decrypt {SOPS_FILE}")
     else:
         print("Usage: nixflix secrets {edit|show}")
+
+
+@app.command()
+def check():
+    """Check all services health, API connectivity, and cross-service integration"""
+    sys.exit(run_check())
 
 
 def setup_dirs_impl():
