@@ -5,7 +5,8 @@ requires-python = ">=3.12"
 dependencies = ["typer"]
 
 [tool.ruff.lint]
-select = ["I"]
+select = ["I", "F", "W", "E", "PL", "RUF"]
+ignore = ["F403", "E501", "PLR2004"]
 
 [tool.ruff.lint.isort]
 force-single-line = true

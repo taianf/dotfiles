@@ -4,8 +4,6 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from dataclasses import field
-from pathlib import Path
-from typing import Optional
 from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib.request import Request
@@ -46,7 +44,7 @@ class _Check:
     children: list["_Check"] = field(default_factory=list)
 
 
-def _read_secret(path: str) -> Optional[str]:
+def _read_secret(path: str) -> str | None:
     full = os.path.join(SECRETS_DIR, path)
     try:
         with open(full) as f:
@@ -55,13 +53,14 @@ def _read_secret(path: str) -> Optional[str]:
         return None
 
 
-def _sudo_secret(path: str) -> Optional[str]:
+def _sudo_secret(path: str) -> str | None:
     try:
         r = subprocess.run(
             ["sudo", "-n", "cat", os.path.join(SECRETS_DIR, path)],
             capture_output=True,
             text=True,
             timeout=10,
+            check=False,
         )
         if r.returncode == 0:
             return r.stdout.strip()
@@ -70,7 +69,7 @@ def _sudo_secret(path: str) -> Optional[str]:
     return None
 
 
-def _secret(path: str) -> Optional[str]:
+def _secret(path: str) -> str | None:
     return _read_secret(path) or _sudo_secret(path)
 
 
@@ -95,6 +94,7 @@ def _systemd_active(unit: str) -> bool:
         capture_output=True,
         text=True,
         timeout=10,
+        check=False,
     )
     return r.stdout.strip() == "active"
 
@@ -119,7 +119,7 @@ def _print_check(c: _Check, level: int):
         print(f"{indent}  {icon} {c.name}{detail}")
 
 
-def _run_checks():
+def _run_checks():  # noqa: PLR0912, PLR0915
     results: list[_Check] = []
 
     def add(name: str) -> _Check:
@@ -175,7 +175,7 @@ def _run_checks():
     c = add("Service APIs accessible")
     ok = True
     for name, url, headers in api_checks:
-        status, data, err = _api_get(url, headers)
+        status, _, err = _api_get(url, headers)
         child = _Check(name)
         if status in (200, 204):
             child.ok(f"HTTP {status}")
@@ -413,9 +413,9 @@ def _run_checks():
             "http://127.0.0.1:6767/api/system/languages", {"X-Api-Key": bazarr_key}
         )
         if dt:
-            enabled = [l for l in dt if l.get("enabled")]
+            enabled = [lang for lang in dt if lang.get("enabled")]
             bl.ok(
-                f"enabled: {', '.join(l.get('code2', '?') for l in enabled)}"
+                f"enabled: {', '.join(lang.get('code2', '?') for lang in enabled)}"
             ) if enabled else bl.fail("no languages enabled")
         else:
             bl.fail(f"HTTP {st}: {er}")
@@ -525,7 +525,11 @@ def full_refresh():
 
     print("\n=== Step 2: Rebuild system ===")
     log = subprocess.run(
-        "sudo nixos-rebuild switch --quiet", capture_output=True, text=True, shell=True
+        "sudo nixos-rebuild switch --quiet",
+        capture_output=True,
+        text=True,
+        shell=True,
+        check=False,
     )
     if log.returncode != 0:
         print(log.stdout + log.stderr)
@@ -536,6 +540,7 @@ def full_refresh():
         capture_output=True,
         text=True,
         shell=True,
+        check=False,
     )
     if log.returncode != 0:
         print(log.stdout + log.stderr)

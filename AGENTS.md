@@ -72,6 +72,19 @@ This repo manages both **NixOS** (system) and **Home Manager** (user) configurat
 - **Back up before changing system configs**: `sudo cp /etc/nixos/configuration.nix /etc/nixos/configuration.nix.bak`
 - `.bak` files are gitignored — keep them local.
 
+### Pre-commit hooks
+
+- Use `prek` (not `pre-commit` directly) to run pre-commit hooks:
+
+  ```bash
+  prek run --all-files   # run all hooks on all files
+  prek run <hook-id>     # run a single hook
+  ```
+
+- Python linting is handled by ruff via pre-commit. Config is in `nixos/nixflix/pyproject.toml`.
+
+- Ruff rules used: `I` (isort), `F` (pyflakes — unused imports, undefined names), `W`/`E` (pep8), `PL` (pylint), `RUF` (ruff-specific).
+
 ### Rebuild command
 
 ```bash
