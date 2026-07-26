@@ -14,6 +14,7 @@ SERVICES = [
     "jellyfin",
     "seerr",
     "bazarr",
+    "recyclarr",
 ]
 CONFIG_SERVICES = [
     "sonarr-config",
@@ -30,6 +31,7 @@ CONFIG_SERVICES = [
     "jellyfin-metadata-config",
     "jellyfin-system-config",
     "seerr-env",
+    "bazarr-setup",
 ]
 
 
