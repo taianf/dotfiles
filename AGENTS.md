@@ -5,7 +5,8 @@
 This repo manages both **NixOS** (system) and **Home Manager** (user) configuration.
 
 - `nixos/` — shared NixOS modules (imported by `/etc/nixos/configuration.nix`)
-- `home.nix` / `flake.nix` — Home Manager (user-level packages, programs, shell, dotfiles)
+- `home/` — Home Manager domain modules (packages, programs, config-files, services)
+- `home.nix` / `flake.nix` — Home Manager entry points (imports `home/` modules)
 - Machine-specific NixOS config stays in `/etc/nixos/` (not in this repo)
 
 ## Rules
@@ -25,7 +26,7 @@ This repo manages both **NixOS** (system) and **Home Manager** (user) configurat
   (bootloader, hostname, hardware imports).
 - **Shared NixOS config** goes in `nixos/default.nix` and is imported by all machines.
 - **User-level config** (packages, dotfiles, shell) belongs in Home Manager, not NixOS.
-  Example: dotfiles sync service is a `systemd.user.services` in `home.nix`,
+  Example: dotfiles sync service is a `systemd.user.services` in `home/services.nix`,
   not `systemd.services` in NixOS config.
 
 ### Zsh

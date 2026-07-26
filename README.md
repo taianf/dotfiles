@@ -6,17 +6,28 @@ NixOS + Home Manager configuration managed as a Git repo.
 
 ```text
 dotfiles/
-├── flake.nix                      # Home Manager flake entry point
-├── home.nix                       # Home Manager config (user packages, dotfiles sync, shell)
-├── .pre-commit-config.yaml        # Pre-commit hooks (nixfmt)
+├── flake.nix                      # Flake entry point (inputs, NixOS + Home Manager outputs)
+├── home.nix                       # Home Manager entry point (imports home/ modules)
+├── .pre-commit-config.yaml        # Pre-commit hooks (nixfmt, ruff, etc.)
 ├── .gitignore
 ├── secrets.yaml                   # Encrypted secrets (sops-nix) — safe to commit
-├── bin/                        # Custom scripts (added to PATH)
-│   └── secrets                 # Manage encrypted secrets
+├── AGENTS.md                      # Agent instructions for AI coding tools
+├── bin/                           # Custom scripts (added to PATH)
+│   └── secrets                    # Manage encrypted secrets
+├── home/                          # Home Manager domain modules
+│   ├── packages.nix               # User packages (ferdium, google-chrome, sops, etc.)
+│   ├── config-files.nix           # XDG config file symlinks (zed, topgrade, opencode)
+│   ├── programs.nix               # Program configuration (zsh, git, ghostty, etc.)
+│   └── services.nix               # Systemd user services (dotfiles-sync, ferdium)
 └── nixos/
     ├── configuration.nix          # Main NixOS config — symlinked to /etc/nixos/
     ├── default.nix                # Shared NixOS config (imported by all machines)
-    ├── nvidia.nix                 # Nvidia GPU module
+    ├── locale.nix                 # Timezone, locale, keymap
+    ├── desktop.nix                # Display manager, desktop environments, pipewire, SSH
+    ├── programs.nix               # NixOS-level program config (nix-ld, firefox, zsh)
+    ├── hardware.nix               # System packages, podman, i2c
+    ├── users.nix                  # User account
+    ├── nvidia.nix                 # Nvidia GPU module (imported per-machine if needed)
     ├── sops.nix                   # Sops-nix secrets config
     └── nixflix/
         └── default.nix            # Nixflix media stack config
@@ -28,22 +39,32 @@ Two layers of Nix manage your system:
 
 - **NixOS** (system) — `dotfiles/nixos/` (symlinked to `/etc/nixos/`):
   Boot, hardware, networking, services, secrets
-- **Home Manager** (user) — `dotfiles/home.nix`:
+- **Home Manager** (user) — `dotfiles/home.nix` + `dotfiles/home/`:
   Packages, dotfiles sync, shell, git, symlinks
 
 ### NixOS (`dotfiles/nixos/`)
 
-- `configuration.nix` — main config, symlinked to `/etc/nixos/configuration.nix`. Imports everything.
-- `default.nix` — shared config for all machines (locale, desktop, audio, nix-ld, user account).
+- `configuration.nix` — main config, symlinked to `/etc/nixos/configuration.nix`.
+  Imports `default.nix` and machine-specific modules.
+- `default.nix` — shared config for all machines; imports domain modules:
+  - `locale.nix` — timezone, locale, keymap
+  - `desktop.nix` — display manager, desktop environments, audio, SSH
+  - `programs.nix` — nix-ld, firefox, zsh
+  - `hardware.nix` — system packages, podman, i2c
+  - `users.nix` — user account
 - `hardware-configuration.nix` — auto-generated per machine, stays in `/etc/nixos/`. Not in repo.
 - `nvidia.nix` — Nvidia GPU config (imported per-machine if needed).
 - `sops.nix` — sops-nix secrets config.
-- `nixflix.nix` — Nixflix media stack (Sonarr, Radarr, Jellyfin, etc.).
+- `nixflix/` — Nixflix media stack (Sonarr, Radarr, Jellyfin, etc.).
 
-### Home Manager (`dotfiles/`)
+### Home Manager (`dotfiles/home/`)
 
-Managed via a flake. Installs user packages, sets up git, symlinks dotfiles, and
-runs a systemd service that auto-syncs the repo on boot.
+Entry point is `home.nix`, which imports domain modules from `home/`:
+
+- `packages.nix` — user packages (ferdium, google-chrome, sops, etc.)
+- `config-files.nix` — XDG config symlinks (zed, topgrade, opencode)
+- `programs.nix` — program config (zsh, git, ghostty, etc.)
+- `services.nix` — systemd user services (dotfiles-sync, ferdium)
 
 ## Setup on a new machine
 
@@ -165,13 +186,13 @@ pre-commit install
 After editing NixOS config (`dotfiles/nixos/`):
 
 ```bash
-sudo nixos-rebuild switch
+sudo nixos-rebuild switch --impure --flake ~/dotfiles#nixos
 ```
 
-After editing Home Manager config (`home.nix`, `flake.nix`):
+After editing Home Manager config (`home/` modules or `home.nix`):
 
 ```bash
-nix run home-manager -- init --switch ~/dotfiles
+home-manager init --switch ~/dotfiles
 ```
 
 Or use the shorthand:
@@ -185,8 +206,8 @@ nixup
 - **`nix-ld`** — enabled in shared config so uv, and other tools that download
   dynamically linked binaries, work on NixOS.
 - **`dotfiles-sync.service`** — a user-level systemd service defined in
-  `home.nix` that runs `git pull` on boot to keep dotfiles up to date.
-- **Dotfile symlinks** — `home.nix` uses `mkOutOfStoreSymlink` to symlink
+  `home/services.nix` that runs `git pull` on boot to keep dotfiles up to date.
+- **Dotfile symlinks** — `home/config-files.nix` uses `mkOutOfStoreSymlink` to symlink
   `.config/zsh` and `.zshenv` from this repo into your home, so edits in the
   repo take effect immediately.
 - **`*.bak` files** — gitignored; used for local backups before config changes.
