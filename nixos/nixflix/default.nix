@@ -94,11 +94,18 @@ with lib;
     jellyfin = {
       enable = true;
       apiKey._secret = config.sops.secrets."jellyfin/api_key".path;
-      network.knownProxies = [
-        "127.0.0.1"
-        "192.168.68.1"
-      ];
-      network.enablePublishedServerUriByRequest = true;
+      network = {
+        knownProxies = [
+          "127.0.0.1"
+          "192.168.68.1"
+        ];
+        localNetworkAddresses = [
+          "127.0.0.1"
+          "192.168.68.101"
+        ];
+        enablePublishedServerUriByRequest = true;
+        openFirewall = true;
+      };
       users = {
         admin = {
           mutable = false;
