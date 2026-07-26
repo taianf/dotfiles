@@ -109,8 +109,8 @@ with lib;
           "192.168.68.101"
         ];
         enablePublishedServerUriByRequest = true;
-        openFirewall = true;
       };
+      openFirewall = true;
       users = {
         admin = {
           mutable = false;
