@@ -9,6 +9,8 @@ from urllib.request import Request
 from urllib.request import urlopen
 
 SECRETS_DIR = "/run/secrets"
+BAZARR_MIN_SCORE = 90
+BAZARR_PP_THRESHOLD = 90
 SERVICES = [
     "postgresql",
     "nginx",
@@ -20,6 +22,7 @@ SERVICES = [
     "jellyfin",
     "seerr",
     "bazarr",
+    "recyclarr",
 ]
 
 
@@ -352,10 +355,42 @@ def _check_radarr_sonarr_config():
             child.fail(f"HTTP {st}: {er}")
         c.children.append(child)
 
+    # Additional checks for naming format compliance per Jellyfin guide
+    _check_naming_formats(c, radarr_key, sonarr_key)
+
     c.ok() if all(x.passed for x in c.children) else c.fail(
         "some Radarr/Sonarr config items are missing"
     )
     return c
+
+
+def _check_naming_formats(parent: _Check, radarr_key: str, sonarr_key: str) -> None:
+    """Check Radarr/Sonarr naming format compliance per the Jellyfin guide."""
+    for label, url, key, fmt_field in [
+        (
+            "Radarr naming format: Movie Title (Year)",
+            "http://127.0.0.1:7878/api/v3/config/naming",
+            radarr_key,
+            "standardMovieFormat",
+        ),
+        (
+            "Sonarr naming format: Series - SxxExx - Episode",
+            "http://127.0.0.1:8989/api/v3/config/naming",
+            sonarr_key,
+            "standardEpisodeFormat",
+        ),
+    ]:
+        st, dt, er = _api_get(url, {"X-Api-Key": key})
+        child = _Check(label)
+        if dt:
+            standard = dt.get(fmt_field, "")
+            if standard:
+                child.ok(f"format: {standard[:60]}...")
+            else:
+                child.fail("standard format is empty (default)")
+        else:
+            child.fail(f"HTTP {st}: {er}")
+        parent.children.append(child)
 
 
 def _check_bazarr_config():
@@ -401,6 +436,25 @@ def _check_bazarr_config():
         "no providers enabled"
     )
     c.children.append(bpr)
+
+    bq = _Check("Bazarr quality settings (score threshold)")
+    general = bc_data.get("general", {})
+    min_score = general.get("minimum_score", 0)
+    min_score_ok = min_score >= BAZARR_MIN_SCORE
+    bq.ok(f"minimum_score={min_score}") if min_score_ok else bq.fail(
+        f"minimum_score={min_score} (recommended ≥ {BAZARR_MIN_SCORE})"
+    )
+    c.children.append(bq)
+
+    bpst = _Check("Bazarr subtitle sync enabled")
+    use_pp = general.get("use_postprocessing", False)
+    pp_threshold = general.get("postprocessing_threshold", 0)
+    bpst.ok(
+        f"post_processing={use_pp}, threshold={pp_threshold}"
+    ) if use_pp and pp_threshold >= BAZARR_PP_THRESHOLD else bpst.fail(
+        f"post_processing={use_pp}, threshold={pp_threshold}"
+    )
+    c.children.append(bpst)
 
     c.ok() if all(x.passed for x in c.children) else c.fail(
         "some Bazarr config items are missing"
@@ -448,6 +502,55 @@ def _print_check(c: _Check, level: int):
         print(f"{indent}  {icon} {c.name}{detail}")
 
 
+def _check_recyclarr():
+    c = _Check("Recyclarr quality profile sync")
+    recyclarr_key = _secret("radarr/api_key") or ""
+
+    # Check Recyclarr service is running (it runs on a timer)
+    if _systemd_active("recyclarr"):
+        c.ok("recyclarr timer active")
+    else:
+        c.fail("recyclarr timer is not active (may not be enabled)")
+
+    # Check Recyclarr has synced quality profiles to Radarr
+    st, dt, er = _api_get(
+        "http://127.0.0.1:7878/api/v3/qualityprofile",
+        {"X-Api-Key": recyclarr_key},
+    )
+    qp = _Check("TRaSH quality profiles synced to Radarr")
+    if dt:
+        # Look for TRaSH SQP profiles
+        sqp = [p for p in dt if "SQP" in p.get("name", "")]
+        if sqp:
+            qp.ok(f"{len(sqp)} SQP profile(s): {', '.join(p['name'] for p in sqp)}")
+        else:
+            qp.fail("no SQP profiles found (manual profiles still present)")
+    else:
+        qp.fail(f"HTTP {st}: {er}")
+    c.children.append(qp)
+
+    # Check Recyclarr has synced quality profiles to Sonarr
+    sonarr_key = _secret("sonarr/api_key") or ""
+    st, dt, er = _api_get(
+        "http://127.0.0.1:8989/api/v3/qualityprofile",
+        {"X-Api-Key": sonarr_key},
+    )
+    sq = _Check("TRaSH quality profiles synced to Sonarr")
+    if dt:
+        # Look for TRaSH WEB profiles
+        web = [p for p in dt if "WEB-" in p.get("name", "")]
+        if web:
+            sq.ok(f"{len(web)} WEB profile(s): {', '.join(p['name'] for p in web)}")
+        else:
+            sq.fail("no WEB- profiles found (manual profiles still present)")
+    else:
+        sq.fail(f"HTTP {st}: {er}")
+    c.children.append(sq)
+
+    c.ok() if all(x.passed for x in c.children) else c.fail("Recyclarr check failed")
+    return c
+
+
 def run_checks() -> int:
     results = [
         _check_services_running(),
@@ -456,5 +559,6 @@ def run_checks() -> int:
         _check_prowlarr_indexers(),
         _check_radarr_sonarr_config(),
         _check_bazarr_config(),
+        _check_recyclarr(),
     ]
     return _print_report(results)
