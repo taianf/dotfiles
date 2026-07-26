@@ -2,7 +2,6 @@
   description = "Home Manager configuration of taian";
 
   inputs = {
-    # Specify the source of Home Manager and Nixpkgs.
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -13,6 +12,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+    sops-nix.url = "github:Mic92/sops-nix";
+    nixflix = {
+      url = "github:kiriwalawren/nixflix";
+      flake = false;
+    };
+    vpn-confinement = {
+      url = "github:Maroka-chan/VPN-Confinement";
+      flake = false;
+    };
   };
 
   outputs =
@@ -21,6 +29,9 @@
       home-manager,
       herdr,
       nix-cachyos-kernel,
+      sops-nix,
+      nixflix,
+      vpn-confinement,
       ...
     }:
     let
@@ -40,7 +51,11 @@
 
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         inherit system;
+        specialArgs = {
+          inherit nixflix vpn-confinement;
+        };
         modules = [
+          sops-nix.nixosModules.sops
           ./nixos/configuration.nix
           { nixpkgs.overlays = [ nix-cachyos-kernel.overlays.pinned ]; }
         ];

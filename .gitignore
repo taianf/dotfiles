@@ -1,6 +1,10 @@
 # Backups
 *.bak
 
+# Caches
+.ruff_cache/
+.mypy_cache/
+
 # Secrets
 secrets/
 secrets-plain.yaml
