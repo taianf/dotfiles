@@ -197,6 +197,7 @@ with lib;
         "network-online.target"
       ];
       requires = [ "bazarr.service" ];
+      wants = [ "network-online.target" ];
       wantedBy = [ "multi-user.target" ];
 
       serviceConfig = {
@@ -204,6 +205,8 @@ with lib;
         RemainAfterExit = true;
         User = "bazarr";
         Group = config.services.bazarr.group;
+        Restart = "on-failure";
+        RestartSec = "10s";
       };
 
       script =
