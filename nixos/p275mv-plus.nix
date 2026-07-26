@@ -9,6 +9,10 @@ let
 
   applyScript = pkgs.writeShellScript "apply-monitor" ''
     export HOME="/root"
+    if ! ${pkgs.ddcutil}/bin/ddcutil --bus ${toString monitorSettings.bus} detect >/dev/null 2>&1; then
+      echo "No monitor detected on bus /dev/i2c-${toString monitorSettings.bus}, skipping."
+      exit 0
+    fi
     ${pkgs.ddcutil}/bin/ddcutil --bus ${toString monitorSettings.bus} --noverify setvcp 10 ${toString monitorSettings.brightness}
   '';
 in
