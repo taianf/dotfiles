@@ -112,6 +112,17 @@ with lib;
       enable = true;
       apiKey._secret = config.sops.secrets."seerr/api_key".path;
     };
+
+    # TRaSH quality profiles via Recyclarr — syncs community-tested profiles
+    # See: https://trash-guides.info
+    recyclarr = {
+      enable = true;
+      # Selects profiles that prioritize acquisition over quality
+      radarrQuality = "1080p";
+      sonarrQuality = "1080p";
+      # Automatically remove unmanaged quality profiles
+      cleanupUnmanagedProfiles.enable = false;
+    };
   };
 
   services.bazarr = {
@@ -178,9 +189,9 @@ with lib;
         '';
     };
 
-    # Oneshot service to configure languages after Bazarr starts
+    # Oneshot service to configure languages, quality settings, and scan schedule after Bazarr starts
     bazarr-setup = {
-      description = "Configure Bazarr languages and profiles";
+      description = "Configure Bazarr languages, quality settings, and scan schedule";
       after = [
         "bazarr.service"
         "network-online.target"
@@ -226,17 +237,39 @@ with lib;
           echo "Enabling Portuguese..."
           ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
             -H "X-Api-Key: $API_KEY" \
-            -d "languages-enabled=pt" > /dev/null
+            -d "languages-enabled=pt" > /dev/null || true
 
           echo "Enabling English..."
           ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
             -H "X-Api-Key: $API_KEY" \
-            -d "languages-enabled=en" > /dev/null
+            -d "languages-enabled=en" > /dev/null || true
 
           echo "Creating language profile..."
           ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
             -H "X-Api-Key: $API_KEY" \
-            -d 'languages-profiles=[{"profileId":1,"name":"Portuguese + English","cutoff":"pt","items":[{"language":"pt","audio_exclude":false,"forced":false,"hi":false},{"language":"en","audio_exclude":false,"forced":false,"hi":false}],"mustContain":"","mustNotContain":"","originalFormat":null,"tag":""}]' > /dev/null
+            -d 'languages-profiles=[{"profileId":1,"name":"Portuguese + English","cutoff":"pt","items":[{"language":"pt","audio_exclude":false,"forced":false,"hi":false},{"language":"en","audio_exclude":false,"forced":false,"hi":false}],"mustContain":"","mustNotContain":"","originalFormat":null,"tag":""}]' > /dev/null || true
+
+          # --- Quality settings per Jellyfin Full Automation Guide ---
+          echo "Setting subtitle score threshold to 90..."
+          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
+            -H "X-Api-Key: $API_KEY" \
+            -d "general-minimum_score=90" \
+            -d "general-minimum_score_movie=90" > /dev/null || true
+
+          echo "Enabling subtitle post-processing / sync..."
+          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
+            -H "X-Api-Key: $API_KEY" \
+            -d "general-use_postprocessing=true" \
+            -d "general-use_postprocessing_threshold=true" \
+            -d "general-postprocessing_threshold=90" > /dev/null || true
+
+          echo "Scheduling full scan at 3 AM daily..."
+          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
+            -H "X-Api-Key: $API_KEY" \
+            -d "sonarr-full_update=Daily" \
+            -d "sonarr-full_update_hour=3" \
+            -d "radarr-full_update=Daily" \
+            -d "radarr-full_update_hour=3" > /dev/null || true
 
           echo "Bazarr setup complete"
         '';
