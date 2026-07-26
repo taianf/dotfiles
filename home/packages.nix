@@ -19,6 +19,7 @@
             --add-flags "--ozone-platform=wayland"
         '';
       })
+      ggshield
       google-chrome
       nil
       opencode-desktop
