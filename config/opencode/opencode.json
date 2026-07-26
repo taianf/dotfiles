@@ -4,7 +4,7 @@
   "permission": {
     "lsp": "allow"
   },
-  "plugin": ["opencode-goal-plugin"],
+  "plugin": ["opencode-goal-plugin", "@dietrichgeber/ponytail"],
   "command": {
     "goal": {
       "description": "Set a session-scoped goal and auto-continue until complete.",
