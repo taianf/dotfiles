@@ -17,6 +17,9 @@
     "dock": "left"
   },
   "agent_servers": {
+    "kilo": {
+      "type": "registry"
+    },
     "opencode": {
       "default_config_options": {
         "model": "opencode/deepseek-v4-flash-free"

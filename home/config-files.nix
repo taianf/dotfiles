@@ -27,6 +27,7 @@ _: {
     "opencode/oh-my-opencode-slim.json".source = ../config/opencode/oh-my-opencode-slim.json;
     "opencode/opencode.json".source = ../config/opencode/opencode.json;
     "opencode/opencode.jsonc".source = ../config/opencode/opencode.jsonc;
+    "opencode/oh-my-openagent.json".source = ../config/opencode/oh-my-openagent.json;
     "opencode/package.json".source = ../config/opencode/package.json;
     "opencode/plugins/herdr-agent-state.js".source = ../config/opencode/plugins/herdr-agent-state.js;
     "opencode/tui.json".source = ../config/opencode/tui.json;
