@@ -66,7 +66,7 @@ def full_refresh():
         raise SystemExit(1)
 
     log = subprocess.run(
-        "nix run home-manager -- init --switch ~/dotfiles",
+        "nix run home-manager -- init --switch ~/dotfiles -b backup",
         capture_output=True,
         text=True,
         shell=True,

@@ -172,7 +172,7 @@ sops updatekeys secrets.yaml
 ### 7. Activate Home Manager
 
 ```bash
-nix run home-manager -- init --switch ~/dotfiles
+nix run home-manager -- init --switch ~/dotfiles -b backup
 ```
 
 ### 8. Enable pre-commit hooks (optional)
