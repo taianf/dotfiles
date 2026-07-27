@@ -22,14 +22,14 @@ _: {
         )
       '';
     };
-    "zed/settings.json".source = ../config/zed/settings.json;
-    "topgrade.toml".source = ../config/topgrade.toml;
+    "opencode/.gitignore".source = ../config/opencode/.gitignore;
+    "opencode/oh-my-opencode-slim.json".source = ../config/opencode/oh-my-opencode-slim.json;
     "opencode/opencode.json".source = ../config/opencode/opencode.json;
     "opencode/opencode.jsonc".source = ../config/opencode/opencode.jsonc;
-    "opencode/oh-my-opencode-slim.json".source = ../config/opencode/oh-my-opencode-slim.json;
-    "opencode/tui.json".source = ../config/opencode/tui.json;
-    "opencode/.gitignore".source = ../config/opencode/.gitignore;
     "opencode/package.json".source = ../config/opencode/package.json;
     "opencode/plugins/herdr-agent-state.js".source = ../config/opencode/plugins/herdr-agent-state.js;
+    "opencode/tui.json".source = ../config/opencode/tui.json;
+    "topgrade.toml".source = ../config/topgrade.toml;
+    "zed/settings.json".source = ../config/zed/settings.json;
   };
 }
