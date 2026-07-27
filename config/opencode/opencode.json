@@ -6,7 +6,7 @@
   },
   "plugin": [
     "@dietrichgeber/ponytail",
-    "oh-my-opencode",
+    "oh-my-opencode-slim",
     "opencode-goal-plugin",
     "opencode-pty",
     "opencode-supermemory"
@@ -16,6 +16,14 @@
       "description": "Set a session-scoped goal and auto-continue until complete.",
       "template": "$ARGUMENTS",
       "agent": "build"
+    }
+  },
+  "agent": {
+    "explore": {
+      "disable": true
+    },
+    "general": {
+      "disable": true
     }
   }
 }
