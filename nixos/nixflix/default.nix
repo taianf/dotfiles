@@ -21,7 +21,9 @@ with lib;
     "jellyfin/admin_password" = { };
     "seerr/api_key" = { };
     "bazarr/api_key" = {
-      group = config.nixflix.globals.libraryOwner.group;
+      # The Bazarr service runs as User=bazarr, Group=bazarr — so the secret
+      # must be readable by that group, not the media/library group.
+      group = config.services.bazarr.group;
       mode = "0440";
     };
   };
@@ -176,28 +178,31 @@ with lib;
         lib.mkBefore "${pkgs.coreutils}/bin/mkdir -p ${dataDir}";
     };
 
-    # Pre-write config.yaml with sops-managed API key on first start
+    # Pre-write config.yaml with sops-managed API key on first start (or whenever
+    # the apikey is missing/blank — covers the case where an earlier run wrote
+    # a file with an empty apikey because the secret was unreadable).
     bazarr = {
       preStart =
         let
           apiKeyFile = config.sops.secrets."bazarr/api_key".path;
         in
         ''
-                  CONFIG_DIR=${config.services.bazarr.dataDir}/config
-                  CONFIG_FILE=$CONFIG_DIR/config.yaml
-                  if [ ! -f "$CONFIG_FILE" ]; then
-                    mkdir -p "$CONFIG_DIR"
-                    API_KEY=$(cat ${apiKeyFile})
-                    cat > "$CONFIG_FILE" << EOF
+          CONFIG_DIR=${config.services.bazarr.dataDir}/config
+          CONFIG_FILE=$CONFIG_DIR/config.yaml
+          mkdir -p "$CONFIG_DIR"
+          API_KEY=$(cat ${apiKeyFile})
+          # Rewrite if the file is missing OR if the apikey is empty/whitespace.
+          if [ ! -f "$CONFIG_FILE" ] || ! grep -qE '^  apikey: \S' "$CONFIG_FILE"; then
+            cat > "$CONFIG_FILE" << EOF
           auth:
             apikey: $API_KEY
           general:
             use_sonarr: true
             use_radarr: true
           EOF
-                    chown bazarr:${config.services.bazarr.group} "$CONFIG_FILE"
-                    chmod 600 "$CONFIG_FILE"
-                  fi
+            chown bazarr:${config.services.bazarr.group} "$CONFIG_FILE"
+            chmod 600 "$CONFIG_FILE"
+          fi
         '';
     };
 
