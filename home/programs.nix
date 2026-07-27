@@ -46,13 +46,13 @@ _: {
             return 0
           elif [ "$1" = "--verbose" ]; then
             sudo nixos-rebuild switch --impure --flake ~/dotfiles#nixos && \
-            nix run home-manager -- -v init --switch ~/dotfiles
+            nix run home-manager -- -v init --switch ~/dotfiles -b backup
           else
             log=$(sudo nixos-rebuild switch --impure --quiet --flake ~/dotfiles#nixos 2>&1) || {
               echo "$log"
               return 1
             }
-            log=$(nix run home-manager -- init --switch ~/dotfiles 2>&1) || {
+            log=$(nix run home-manager -- init --switch ~/dotfiles -b backup 2>&1) || {
               echo "$log"
               return 1
             }
