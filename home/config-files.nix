@@ -25,5 +25,9 @@ _: {
     "zed/settings.json".source = ../config/zed/settings.json;
     "topgrade.toml".source = ../config/topgrade.toml;
     "opencode/opencode.json".source = ../config/opencode/opencode.json;
+    "opencode/opencode.jsonc".source = ../config/opencode/opencode.jsonc;
+    "opencode/.gitignore".source = ../config/opencode/.gitignore;
+    "opencode/package.json".source = ../config/opencode/package.json;
+    "opencode/plugins/herdr-agent-state.js".source = ../config/opencode/plugins/herdr-agent-state.js;
   };
 }
