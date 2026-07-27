@@ -28,7 +28,9 @@ repos:
     rev: v0.49.1
     hooks:
       - id: markdownlint
-        exclude: '\.agents/'
+        exclude: '\.agents/|config/opencode/command/'
+      - id: markdownlint-fix
+        exclude: '\.agents/|config/opencode/command/'
 
   - repo: https://github.com/NixOS/nixfmt
     rev: v1.4.0
@@ -41,7 +43,7 @@ repos:
     hooks:
       - id: prettier
         types_or: [yaml, markdown, json, gitignore]
-        exclude: '\.agents/'
+        exclude: '\.agents/|config/opencode/command/'
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
