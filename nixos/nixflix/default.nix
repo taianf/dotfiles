@@ -271,9 +271,7 @@ with lib;
           echo "Enabling subtitle providers (Addic7ed, Podnapisi, OpenSubtitles)..."
           ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
             -H "X-Api-Key: $API_KEY" \
-            -d "general-enabled_providers=addic7ed" \
-            -d "general-enabled_providers=podnapisi" \
-            -d "general-enabled_providers=opensubtitles" > /dev/null || true
+            -d "general-enabled_providers=addic7ed,podnapisi,opensubtitles" > /dev/null || true
 
           # --- Quality settings per Jellyfin Full Automation Guide ---
           echo "Setting subtitle score threshold to 90..."
