@@ -4,12 +4,26 @@
   "permission": {
     "lsp": "allow"
   },
-  "plugin": ["opencode-goal-plugin", "@dietrichgeber/ponytail"],
+  "plugin": [
+    "@dietrichgeber/ponytail",
+    "oh-my-opencode-slim",
+    "opencode-goal-plugin",
+    "opencode-pty",
+    "opencode-supermemory"
+  ],
   "command": {
     "goal": {
       "description": "Set a session-scoped goal and auto-continue until complete.",
       "template": "$ARGUMENTS",
       "agent": "build"
+    }
+  },
+  "agent": {
+    "explore": {
+      "disable": true
+    },
+    "general": {
+      "disable": true
     }
   }
 }
