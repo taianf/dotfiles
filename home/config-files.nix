@@ -23,6 +23,7 @@ _: {
       '';
     };
     "opencode/.gitignore".source = ../config/opencode/.gitignore;
+    "opencode/command".source = ../config/opencode/command;
     "opencode/oh-my-opencode-slim.json".source = ../config/opencode/oh-my-opencode-slim.json;
     "opencode/opencode.json".source = ../config/opencode/opencode.json;
     "opencode/opencode.jsonc".source = ../config/opencode/opencode.jsonc;
