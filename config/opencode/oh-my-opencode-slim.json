@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
+  "disabled_hooks": ["anthropic-context-window-limit-recovery"],
   "preset": "opencode-go",
   "presets": {
     "openai": {
