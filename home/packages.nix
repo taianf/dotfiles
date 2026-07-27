@@ -13,6 +13,7 @@
       ferdiumWrapped
       ggshield
       google-chrome
+      jq
       nil
       opencode-desktop
       nixd

@@ -301,7 +301,9 @@ with lib;
 
     # Radarr → Jellyfin Connect notification: tells Jellyfin to refresh its library
     # whenever Radarr imports a movie. Mirrors Step 3 of the Jellyfin Full Automation
-    # Guide (2026). Idempotent: matches by name, creates if missing, updates otherwise.
+    # Guide (2026). Idempotent: matches by MediaBrowser implementation, creates if
+    # missing, updates otherwise. The `updateLibrary` field is the actual library-
+    # refresh trigger; `host`/`port`/`useSsl`/`urlBase` are the connection fields.
     radarr-jellyfin-connect = mkIf config.nixflix.radarr.enable {
       description = "Configure Radarr Jellyfin Connect notification";
       after = [
@@ -318,25 +320,20 @@ with lib;
         RemainAfterExit = true;
         Restart = "on-failure";
         RestartSec = "10s";
-        LoadCredential =
-          let
-            radarrKeyFile = config.nixflix.radarr.config.apiKey._secret or null;
-            jellyfinKeyFile = config.sops.secrets."jellyfin/api_key".path;
-          in
-          [
-            "radarr_api_key:${
-              if config.nixflix.radarr.config.apiKey._secret or null != null then
-                config.nixflix.radarr.config.apiKey._secret
-              else
-                pkgs.writeText "radarr-api-key" config.nixflix.radarr.config.apiKey
-            }"
-            "jellyfin_api_key:${jellyfinKeyFile}"
-          ];
+        LoadCredential = [
+          "radarr_api_key:${
+            if config.nixflix.radarr.config.apiKey._secret or null != null then
+              config.nixflix.radarr.config.apiKey._secret
+            else
+              pkgs.writeText "radarr-api-key" config.nixflix.radarr.config.apiKey
+          }"
+          "jellyfin_api_key:${config.sops.secrets."jellyfin/api_key".path}"
+        ];
       };
-
       script =
         let
           radarrPort = toString config.nixflix.radarr.config.hostConfig.port;
+          jellyfinHost = "127.0.0.1";
           jellyfinPort = toString config.nixflix.jellyfin.network.internalHttpPort;
           curl = "${pkgs.curl.bin}/bin/curl";
           jq = "${pkgs.jq}/bin/jq";
@@ -347,7 +344,6 @@ with lib;
           RADARR_API_KEY=$(cat /run/credentials/radarr-jellyfin-connect.service/radarr_api_key)
           JELLYFIN_API_KEY=$(cat /run/credentials/radarr-jellyfin-connect.service/jellyfin_api_key)
           BASE_URL="http://127.0.0.1:${radarrPort}/api/v3"
-          JELLYFIN_URL="http://127.0.0.1:${jellyfinPort}"
 
           echo "Waiting for Radarr API..."
           for i in $(seq 1 60); do
@@ -362,24 +358,29 @@ with lib;
             sleep 2
           done
 
-          echo "Fetching notification schemas..."
+          echo "Fetching notification schema for Emby / Jellyfin..."
           SCHEMAS=$(${curl} -s "$BASE_URL/notification/schema" -H "X-Api-Key: $RADARR_API_KEY")
-          SCHEMA=$(echo "$SCHEMAS" | ${jq} -r '.[] | select(.implementationName == "Jellyfin") | @json' | head -n1)
+          SCHEMA=$(echo "$SCHEMAS" | ${jq} -r --arg impl "Emby / Jellyfin" \
+            '.[] | select(.implementationName == $impl) | @json' | head -n1)
 
           if [ -z "$SCHEMA" ] || [ "$SCHEMA" = "null" ]; then
-            echo "Jellyfin notification schema not found in Radarr"
+            echo "Emby / Jellyfin notification schema not found in Radarr"
             exit 1
           fi
 
           echo "Fetching existing notifications..."
           EXISTING=$(${curl} -s "$BASE_URL/notification" -H "X-Api-Key: $RADARR_API_KEY")
 
-          EXISTING_ID=$(echo "$EXISTING" | ${jq} -r --arg impl Jellyfin \
+          # Existing entries use implementation: "MediaBrowser", not the friendly name.
+          EXISTING_ID=$(echo "$EXISTING" | ${jq} -r --arg impl MediaBrowser \
             '.[] | select(.implementation == $impl) | .id' | head -n1)
 
-          # Build the notification payload from the schema
+          # Build the notification payload from the schema. updateLibrary=true is
+          # the actual "refresh Jellyfin library on import" trigger. Field names
+          # are onMovieFileDelete / onMovieFileDeleteForUpgrade (no trailing 'd').
           NOTIFICATION=$(echo "$SCHEMA" | ${jq} \
-            --arg host "$JELLYFIN_URL" \
+            --arg host "${jellyfinHost}" \
+            --argjson port ${jellyfinPort} \
             --arg apiKey "$JELLYFIN_API_KEY" \
             '
               .name = "Jellyfin"
@@ -388,7 +389,9 @@ with lib;
               | .onUpgrade = true
               | .onRename = true
               | .onMovieAdded = true
-              | .onMovieFileDeleted = true
+              | .onMovieDelete = true
+              | .onMovieFileDelete = true
+              | .onMovieFileDeleteForUpgrade = true
               | .onHealthIssue = false
               | .onHealthRestored = false
               | .onApplicationUpdate = true
@@ -396,39 +399,38 @@ with lib;
               | .includeHealthWarnings = false
               | .fields |= map(
                   if .name == "host" then .value = $host
+                  elif .name == "port" then .value = $port
                   elif .name == "apiKey" then .value = $apiKey
                   elif .name == "useSsl" then .value = false
                   elif .name == "urlBase" then .value = ""
-                  elif .name == "displaySeconds" then .value = 0
-                  elif .name == "enabled" then .value = true
+                  elif .name == "notify" then .value = false
+                  elif .name == "updateLibrary" then .value = true
                   else . end
                 )
             ')
 
+          do_request() {
+            local method="$1"
+            local url="$2"
+            ${curl} -s -o /tmp/req_response -w "%{http_code}" \
+              -X "$method" "$url" \
+              -H "X-Api-Key: $RADARR_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$NOTIFICATION"
+          }
+
           if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
             echo "Updating existing Radarr → Jellyfin notification (ID: $EXISTING_ID)..."
-            HTTP_CODE=$(${curl} -s -o /tmp/put_response -w "%{http_code}" \
-              -X PUT "$BASE_URL/notification/$EXISTING_ID" \
-              -H "X-Api-Key: $RADARR_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "$NOTIFICATION")
-            if [ "$HTTP_CODE" -ge 400 ]; then
-              echo "PUT failed (HTTP $HTTP_CODE):"
-              cat /tmp/put_response
-              exit 1
-            fi
+            HTTP_CODE=$(do_request PUT "$BASE_URL/notification/$EXISTING_ID")
           else
             echo "Creating Radarr → Jellyfin notification..."
-            HTTP_CODE=$(${curl} -s -o /tmp/post_response -w "%{http_code}" \
-              -X POST "$BASE_URL/notification" \
-              -H "X-Api-Key: $RADARR_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "$NOTIFICATION")
-            if [ "$HTTP_CODE" -ge 400 ]; then
-              echo "POST failed (HTTP $HTTP_CODE):"
-              cat /tmp/post_response
-              exit 1
-            fi
+            HTTP_CODE=$(do_request POST "$BASE_URL/notification")
+          fi
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "Request failed (HTTP $HTTP_CODE):"
+            cat /tmp/req_response
+            exit 1
           fi
 
           echo "Radarr → Jellyfin Connect notification configured"
@@ -453,25 +455,21 @@ with lib;
         RemainAfterExit = true;
         Restart = "on-failure";
         RestartSec = "10s";
-        LoadCredential =
-          let
-            sonarrKeyFile = config.nixflix.sonarr.config.apiKey._secret or null;
-            jellyfinKeyFile = config.sops.secrets."jellyfin/api_key".path;
-          in
-          [
-            "sonarr_api_key:${
-              if config.nixflix.sonarr.config.apiKey._secret or null != null then
-                config.nixflix.sonarr.config.apiKey._secret
-              else
-                pkgs.writeText "sonarr-api-key" config.nixflix.sonarr.config.apiKey
-            }"
-            "jellyfin_api_key:${jellyfinKeyFile}"
-          ];
+        LoadCredential = [
+          "sonarr_api_key:${
+            if config.nixflix.sonarr.config.apiKey._secret or null != null then
+              config.nixflix.sonarr.config.apiKey._secret
+            else
+              pkgs.writeText "sonarr-api-key" config.nixflix.sonarr.config.apiKey
+          }"
+          "jellyfin_api_key:${config.sops.secrets."jellyfin/api_key".path}"
+        ];
       };
 
       script =
         let
           sonarrPort = toString config.nixflix.sonarr.config.hostConfig.port;
+          jellyfinHost = "127.0.0.1";
           jellyfinPort = toString config.nixflix.jellyfin.network.internalHttpPort;
           curl = "${pkgs.curl.bin}/bin/curl";
           jq = "${pkgs.jq}/bin/jq";
@@ -482,7 +480,6 @@ with lib;
           SONARR_API_KEY=$(cat /run/credentials/sonarr-jellyfin-connect.service/sonarr_api_key)
           JELLYFIN_API_KEY=$(cat /run/credentials/sonarr-jellyfin-connect.service/jellyfin_api_key)
           BASE_URL="http://127.0.0.1:${sonarrPort}/api/v3"
-          JELLYFIN_URL="http://127.0.0.1:${jellyfinPort}"
 
           echo "Waiting for Sonarr API..."
           for i in $(seq 1 60); do
@@ -497,23 +494,25 @@ with lib;
             sleep 2
           done
 
-          echo "Fetching notification schemas..."
+          echo "Fetching notification schema for Emby / Jellyfin..."
           SCHEMAS=$(${curl} -s "$BASE_URL/notification/schema" -H "X-Api-Key: $SONARR_API_KEY")
-          SCHEMA=$(echo "$SCHEMAS" | ${jq} -r '.[] | select(.implementationName == "Jellyfin") | @json' | head -n1)
+          SCHEMA=$(echo "$SCHEMAS" | ${jq} -r --arg impl "Emby / Jellyfin" \
+            '.[] | select(.implementationName == $impl) | @json' | head -n1)
 
           if [ -z "$SCHEMA" ] || [ "$SCHEMA" = "null" ]; then
-            echo "Jellyfin notification schema not found in Sonarr"
+            echo "Emby / Jellyfin notification schema not found in Sonarr"
             exit 1
           fi
 
           echo "Fetching existing notifications..."
           EXISTING=$(${curl} -s "$BASE_URL/notification" -H "X-Api-Key: $SONARR_API_KEY")
 
-          EXISTING_ID=$(echo "$EXISTING" | ${jq} -r --arg impl Jellyfin \
+          EXISTING_ID=$(echo "$EXISTING" | ${jq} -r --arg impl MediaBrowser \
             '.[] | select(.implementation == $impl) | .id' | head -n1)
 
           NOTIFICATION=$(echo "$SCHEMA" | ${jq} \
-            --arg host "$JELLYFIN_URL" \
+            --arg host "${jellyfinHost}" \
+            --argjson port ${jellyfinPort} \
             --arg apiKey "$JELLYFIN_API_KEY" \
             '
               .name = "Jellyfin"
@@ -523,8 +522,9 @@ with lib;
               | .onRename = true
               | .onSeriesAdd = true
               | .onSeriesDelete = true
-              | .onEpisodeFileDeleted = true
-              | .onEpisodeFileAdded = true
+              | .onEpisodeFileDelete = true
+              | .onEpisodeFileDeleteForUpgrade = true
+              | .onImportComplete = true
               | .onHealthIssue = false
               | .onHealthRestored = false
               | .onApplicationUpdate = true
@@ -532,39 +532,38 @@ with lib;
               | .includeHealthWarnings = false
               | .fields |= map(
                   if .name == "host" then .value = $host
+                  elif .name == "port" then .value = $port
                   elif .name == "apiKey" then .value = $apiKey
                   elif .name == "useSsl" then .value = false
                   elif .name == "urlBase" then .value = ""
-                  elif .name == "displaySeconds" then .value = 0
-                  elif .name == "enabled" then .value = true
+                  elif .name == "notify" then .value = false
+                  elif .name == "updateLibrary" then .value = true
                   else . end
                 )
             ')
 
+          do_request() {
+            local method="$1"
+            local url="$2"
+            ${curl} -s -o /tmp/req_response -w "%{http_code}" \
+              -X "$method" "$url" \
+              -H "X-Api-Key: $SONARR_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$NOTIFICATION"
+          }
+
           if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
             echo "Updating existing Sonarr → Jellyfin notification (ID: $EXISTING_ID)..."
-            HTTP_CODE=$(${curl} -s -o /tmp/put_response -w "%{http_code}" \
-              -X PUT "$BASE_URL/notification/$EXISTING_ID" \
-              -H "X-Api-Key: $SONARR_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "$NOTIFICATION")
-            if [ "$HTTP_CODE" -ge 400 ]; then
-              echo "PUT failed (HTTP $HTTP_CODE):"
-              cat /tmp/put_response
-              exit 1
-            fi
+            HTTP_CODE=$(do_request PUT "$BASE_URL/notification/$EXISTING_ID")
           else
             echo "Creating Sonarr → Jellyfin notification..."
-            HTTP_CODE=$(${curl} -s -o /tmp/post_response -w "%{http_code}" \
-              -X POST "$BASE_URL/notification" \
-              -H "X-Api-Key: $SONARR_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "$NOTIFICATION")
-            if [ "$HTTP_CODE" -ge 400 ]; then
-              echo "POST failed (HTTP $HTTP_CODE):"
-              cat /tmp/post_response
-              exit 1
-            fi
+            HTTP_CODE=$(do_request POST "$BASE_URL/notification")
+          fi
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "Request failed (HTTP $HTTP_CODE):"
+            cat /tmp/req_response
+            exit 1
           fi
 
           echo "Sonarr → Jellyfin Connect notification configured"
