@@ -75,8 +75,45 @@ Created automatically on first rebuild:
 | Seerr       | `http://seerr.nixflix`       | `http://localhost:5055` |
 | Bazarr      | `http://bazarr.nixflix`      | `http://localhost:6767` |
 
+## Automated integrations (Jellyfin Full Automation Guide 2026)
+
+These one-shot systemd services run on first boot and on `nixflix refresh`
+to wire the stack together per the
+[Jellyfin Full Automation Guide (2026)][tutorial]:
+
+| Service                           | What it does                                                     |
+| --------------------------------- | ---------------------------------------------------------------- |
+| `prowlarr-applications.service`   | Adds Sonarr/Radarr/Lidarr app entries in Prowlarr (fullSync)     |
+| `prowlarr-indexers.service`       | Adds the indexers declared in `nixflix.prowlarr.config.indexers` |
+| `radarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Radarr      |
+| `sonarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Sonarr      |
+| `bazarr-setup.service`            | Enables providers, score ≥ 90, sync, 3 AM scan                   |
+| `seerr-setup.service`             | Initial Seerr setup: connect to Jellyfin, sync libraries         |
+| `seerr-jellyfin.service`          | Maintain Seerr ↔ Jellyfin host settings                          |
+| `seerr-radarr.service`            | Maintain Seerr → Radarr instance(s)                              |
+| `seerr-sonarr.service`            | Maintain Seerr → Sonarr instance(s)                              |
+| `recyclarr.service`               | Syncs TRaSH guide quality profiles to Radarr/Sonarr              |
+
+`seerr-setup` and `prowlarr-indexers` are intentionally disabled at first boot
+(intra-stack dependencies make them fail before everything is up). Run
+`nixflix refresh` after the first successful `nixup` to apply them.
+
+```bash
+nixflix refresh     # re-run all config oneshots
+nixflix check       # verify all services and integrations
+```
+
+### OpenSubtitles.com API key
+
+`bazarr-setup` enables OpenSubtitles as a provider but cannot configure
+credentials without a secret. Add the free API key via the Bazarr UI
+(`Settings → Providers → OpenSubtitles.com`) — the provider slot is
+already wired.
+
 ## Resources
 
 - [Nixflix docs](https://kiriwalawren.github.io/nixflix/)
 - [Nixflix GitHub](https://github.com/kiriwalawren/nixflix)
 - [Basic setup example](https://kiriwalawren.github.io/nixflix/examples/basic-setup/)
+
+[tutorial]: https://jellywatch.app/blog/jellyfin-full-automation-guide-radarr-sonarr-bazarr-jellyseerr-2026

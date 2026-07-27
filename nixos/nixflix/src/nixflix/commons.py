@@ -19,8 +19,10 @@ SERVICES = [
 CONFIG_SERVICES = [
     "sonarr-config",
     "sonarr-setup-logs-db",
+    "sonarr-jellyfin-connect",
     "radarr-config",
     "radarr-setup-logs-db",
+    "radarr-jellyfin-connect",
     "lidarr-config",
     "lidarr-setup-logs-db",
     "prowlarr-config",
