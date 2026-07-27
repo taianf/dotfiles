@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  ferdiumWrapped,
   ...
 }:
 {
@@ -31,7 +32,7 @@
     };
     Service = {
       Type = "simple";
-      ExecStart = "${pkgs.ferdium}/bin/ferdium";
+      ExecStart = "${ferdiumWrapped}/bin/ferdium";
       Restart = "on-failure";
       RestartSec = 5;
     };

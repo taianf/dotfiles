@@ -2,6 +2,8 @@
   "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
   "disabled_hooks": ["anthropic-context-window-limit-recovery"],
   "preset": "opencode-go",
+  "disabled_agents": [],
+  "image_routing": "auto",
   "presets": {
     "openai": {
       "orchestrator": {
@@ -44,7 +46,7 @@
     "opencode-go": {
       "orchestrator": {
         "model": "opencode-go/minimax-m3",
-        "variant": "max",
+        "variant": "thinking",
         "skills": ["*"],
         "mcps": ["*", "!context7"]
       },
@@ -56,7 +58,7 @@
       },
       "explorer": {
         "model": "opencode-go/deepseek-v4-flash",
-        "variant": "max",
+        "variant": "high",
         "skills": [],
         "mcps": []
       },
@@ -68,7 +70,6 @@
       },
       "designer": {
         "model": "opencode-go/kimi-k2.7-code",
-        "variant": "medium",
         "skills": [],
         "mcps": []
       },
@@ -80,7 +81,6 @@
       },
       "observer": {
         "model": "opencode-go/mimo-v2.5",
-        "variant": "max",
         "skills": [],
         "mcps": []
       }
