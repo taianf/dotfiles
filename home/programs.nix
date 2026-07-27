@@ -8,6 +8,7 @@ _: {
     gh.enable = true;
     topgrade.enable = true;
     spotify-player.enable = true;
+    bun.enable = true;
 
     zsh = {
       enable = true;
