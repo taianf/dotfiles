@@ -32,6 +32,5 @@ _: {
     "opencode/plugins/herdr-agent-state.js".source = ../config/opencode/plugins/herdr-agent-state.js;
     "opencode/tui.json".source = ../config/opencode/tui.json;
     "topgrade.toml".source = ../config/topgrade.toml;
-    "zed/settings.json".source = ../config/zed/settings.json;
   };
 }

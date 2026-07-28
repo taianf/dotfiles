@@ -23,7 +23,6 @@
       statix
       uv
       wget
-      zed-editor
     ]
     ++ [
       herdr.packages.${pkgs.system}.default
