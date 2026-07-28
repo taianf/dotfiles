@@ -7,13 +7,7 @@ _: {
       Exec=ferdium
       X-GNOME-Autostart-enabled=true
     '';
-    "autostart/opencode-desktop.desktop".text = ''
-      [Desktop Entry]
-      Type=Application
-      Name=OpenCode Desktop
-      Exec=opencode-desktop
-      X-GNOME-Autostart-enabled=true
-    '';
+
     "cosmic/com.system76.CosmicComp/v1/keyboard_config" = {
       force = true;
       text = ''
