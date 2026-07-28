@@ -14,7 +14,6 @@
       ggshield
       google-chrome
       nil
-      opencode-desktop
       nixd
       prek
       nixfmt
