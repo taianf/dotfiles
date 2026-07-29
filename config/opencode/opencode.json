@@ -4,6 +4,13 @@
   "permission": {
     "lsp": "allow"
   },
+  "mcp": {
+    "codegraph": {
+      "type": "local",
+      "command": ["codegraph", "serve", "--mcp"],
+      "enabled": true
+    }
+  },
   "plugin": [
     "@dietrichgeber/ponytail",
     "oh-my-opencode-slim",
