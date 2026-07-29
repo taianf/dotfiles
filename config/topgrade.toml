@@ -122,7 +122,7 @@
 # When set to autodetect: use nh when available, fall back to vanilla
 # Allowed values:
 #   autodetect, nh, vanilla
-# nix_handler = "autodetect"
+nix_handler = "nh"
 
 
 # Commands to run before anything

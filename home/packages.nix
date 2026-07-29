@@ -14,8 +14,8 @@
       ggshield
       google-chrome
       jq
+      nh
       nil
-      opencode-desktop
       nixd
       prek
       nixfmt
@@ -24,7 +24,6 @@
       statix
       uv
       wget
-      zed-editor
     ]
     ++ [
       herdr.packages.${pkgs.system}.default
