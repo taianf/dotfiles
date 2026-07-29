@@ -13,10 +13,6 @@
     topgrade.enable = true;
     spotify-player.enable = true;
     bun.enable = true;
-    # Required for `codegraph` (Bun global install) whose launcher
-    # has `#!/usr/bin/env node`. Without this, `codegraph` errors
-    # with `env: 'node': No such file or directory`.
-    nodejs.enable = true;
     fzf.enable = true;
 
     zsh = {
@@ -216,4 +212,21 @@
       };
     };
   };
+
+  # Required for the `autojump` oh-my-zsh plugin: the plugin shells out
+  # to the `autojump` binary, which lives in the `programs.autojump`
+  # package. Without this, every new zsh prints
+  # `[oh-my-zsh] autojump not found. Please install it first.`
+  programs.autojump.enable = true;
+
+  # Required for `codegraph` (Bun global install) whose launcher has
+  # `#!/usr/bin/env node`. Without this, `codegraph` errors with
+  # `env: 'node': No such file or directory`.
+  #
+  # The pinned `home-manager` (see `flake.lock`) does not yet expose a
+  # `programs.nodejs` module, so we install the package directly at
+  # the top level. When a newer `home-manager` is bumped in, switch
+  # back to `programs.nodejs.enable = true;` per AGENTS.md (prefer
+  # `programs.*` over `home.packages`).
+  home.packages = [ pkgs.nodejs ];
 }
