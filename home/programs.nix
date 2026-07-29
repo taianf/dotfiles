@@ -22,7 +22,7 @@ _: {
       };
       initContent = ''
         export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
-        export PATH="$HOME/dotfiles/bin:$PATH"
+        export PATH="$HOME/dotfiles/bin:$HOME/.bun/bin:$PATH"
         source $HOME/dotfiles/zsh/completions/_nixflix 2>/dev/null
         eval "$(COMPLETE=zsh prek)"
 
