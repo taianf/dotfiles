@@ -60,6 +60,9 @@
   propagate to the live host immediately.
 - Always create a feature branch, push, and open a PR.
 - **Never merge PRs** — open the PR and let the user review and merge.
+- **Don't amend or force-push.** PRs are squash-merged, so each fix or
+  follow-up should be its own commit. Linear per-commit history makes PR
+  reviews easier to follow.
 - A PR comment starting with `/oc` or `/opencode` triggers
   `.github/workflows/opencode.yml` (model: `opencode-go/deepseek-v4-flash`).
 
