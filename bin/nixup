@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Rebuild NixOS system + Home Manager.
+#
+# Usage:
+#   nixup             # quiet, show output only on failure
+#   nixup --verbose   # stream full output of every step
+#   nixup --dry-run   # check flake + parse nix files + build activation package, do not switch
+#
+# Behavior:
+#   - Runs system rebuild first, then home — independently. One failure
+#     does not abort the other.
+#   - Prints a final summary listing which steps succeeded and which failed.
+#   - Exits non-zero if any step failed.
+
+set -u
+
+DOTFILES="${HOME}/dotfiles"
+ARG="${1:-}"
+
+run_step() {
+  # run_step <label> <command...>
+  # Streams output in --verbose, otherwise captures and only prints on failure.
+  local label="$1"
+  shift
+  local log status
+  echo "==> ${label}"
+  if [ "${ARG}" = "--verbose" ]; then
+    "$@"
+    status=$?
+  else
+    log=$("$@" 2>&1)
+    status=$?
+    if [ "${status}" -ne 0 ]; then
+      printf '%s\n' "${log}"
+    fi
+  fi
+  return "${status}"
+}
+
+if [ "${ARG}" = "--dry-run" ]; then
+  echo "==> Checking flake"
+  nix --extra-experimental-features 'nix-command flakes' flake check "${DOTFILES}" || {
+    echo "  ✗ flake check failed"
+    exit 1
+  }
+  echo "  ✓ flake check passed"
+
+  echo "==> Parsing nix files"
+  local_failed=0
+  for f in "${DOTFILES}"/*.nix "${DOTFILES}"/nixos/*.nix; do
+    [ -f "${f}" ] || continue
+    if nix-instantiate --parse "${f}" >/dev/null 2>&1; then
+      echo "  ✓ ${f}"
+    else
+      echo "  ✗ ${f}"
+      local_failed=1
+    fi
+  done
+  [ "${local_failed}" -eq 0 ] || exit 1
+
+  echo "==> Building home-manager activation package"
+  if nix --extra-experimental-features 'nix-command flakes' build \
+      --impure --no-link "${DOTFILES}#homeConfigurations.taian.activationPackage"; then
+    echo "  ✓ activation package builds"
+    exit 0
+  else
+    echo "  ✗ activation package build failed"
+    exit 1
+  fi
+fi
+
+# Live rebuild: try both, report both.
+sys_status=0
+home_status=0
+
+run_step "Rebuilding NixOS system" \
+  sudo nixos-rebuild switch --impure --flake "${DOTFILES}#nixos"
+sys_status=$?
+if [ "${sys_status}" -eq 0 ]; then
+  echo "  ✓ system: ok"
+else
+  echo "  ✗ system: failed"
+fi
+
+run_step "Rebuilding Home Manager" \
+  nix run home-manager -- init --switch "${DOTFILES}" -b backup
+home_status=$?
+if [ "${home_status}" -eq 0 ]; then
+  echo "  ✓ home: ok"
+else
+  echo "  ✗ home: failed"
+fi
+
+echo ""
+echo "==> Summary"
+if [ "${sys_status}" -eq 0 ]; then
+  echo "  ✓ NixOS system:   succeeded"
+else
+  echo "  ✗ NixOS system:   failed"
+fi
+if [ "${home_status}" -eq 0 ]; then
+  echo "  ✓ Home Manager:   succeeded"
+else
+  echo "  ✗ Home Manager:   failed"
+fi
+
+if [ "${sys_status}" -ne 0 ] || [ "${home_status}" -ne 0 ]; then
+  exit 1
+fi
+exit 0
