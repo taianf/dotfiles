@@ -29,7 +29,6 @@
 
 # Disable specific steps - same options as the command line flag
 # disable = ["system", "emacs"]
-disable = ["nix", "nix_helper"]
 
 # Run these steps before all others
 # first = ["chezmoi"]
@@ -119,12 +118,6 @@ disable = ["nix", "nix_helper"]
 # (default: true)
 # show_distribution_summary = false
 
-# For NixOS/home-manager, there are multiple ways to switch to newer configurations.
-# When set to autodetect: use nh when available, fall back to vanilla
-# Allowed values:
-#   autodetect, nh, vanilla
-nix_handler = "nh"
-
 
 # Commands to run before anything
 [pre_commands]
@@ -138,8 +131,7 @@ nix_handler = "nh"
 
 # Custom commands
 [commands]
-"nh: os switch" = "nh os switch"
-"nh: home switch" = "nh home switch"
+"Nixup (system + home)" = "nixup"
 
 
 [python]
