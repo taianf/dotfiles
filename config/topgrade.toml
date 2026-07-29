@@ -27,8 +27,20 @@
 # Sudo command to be used
 # sudo_command = "sudo"
 
-# Disable specific steps - same options as the command line flag
-# disable = ["system", "emacs"]
+# Disable specific steps - same options as the command line flag.
+#
+# `system` is disabled because this system uses flakes (see nixup) — the default
+# NixOS `system` step runs the channel-based `nix-build '<nixpkgs/nixos>'`, which
+# fails with `file 'nixos-config' was not found` on flake-only systems.
+#
+# `nix` and `home_manager` are disabled for two reasons:
+#   1. `nixup` (see [commands] below) already runs both `nixos-rebuild` and
+#      `home-manager switch` for us, end-to-end.
+#   2. The `home_manager` step has a topgrade bug (unix.rs ~1023) where it
+#      `unreachable!()`s when `nh` is on PATH but `$NH_FLAKE` / `$NH_HOME_FLAKE`
+#      are unset — even though our `nixup` invocation already handles it.
+#      See https://github.com/topgrade-rs/topgrade/blob/main/src/steps/os/unix.rs
+disable = ["system", "nix", "home_manager"]
 
 # Run these steps before all others
 # first = ["chezmoi"]
