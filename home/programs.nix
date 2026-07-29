@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   ...
 }:
@@ -16,7 +17,7 @@
     fzf.enable = true;
     nh = {
       enable = true;
-      flake = "/home/taian/dotfiles";
+      flake = config.home.homeDirectory + "/dotfiles";
     };
 
     zsh = {
