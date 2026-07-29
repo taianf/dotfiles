@@ -137,7 +137,6 @@ nix_handler = "nh"
 
 # Custom commands
 [commands]
-"Nixup (system + home)" = "nixup"
 
 
 [python]
