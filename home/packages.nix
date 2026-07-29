@@ -13,6 +13,7 @@
       ferdiumWrapped
       ggshield
       google-chrome
+      jq
       nh
       nil
       nixd
