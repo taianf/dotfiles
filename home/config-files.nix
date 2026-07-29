@@ -19,8 +19,14 @@ _: {
     "opencode/.gitignore".source = ../config/opencode/.gitignore;
     "opencode/command".source = ../config/opencode/command;
     "opencode/oh-my-opencode-slim.json".source = ../config/opencode/oh-my-opencode-slim.json;
-    "opencode/opencode.json".source = ../config/opencode/opencode.json;
-    "opencode/opencode.jsonc".source = ../config/opencode/opencode.jsonc;
+    "opencode/opencode.json" = {
+      force = true;
+      source = ../config/opencode/opencode.json;
+    };
+    "opencode/opencode.jsonc" = {
+      force = true;
+      source = ../config/opencode/opencode.jsonc;
+    };
     "opencode/oh-my-openagent.json".source = ../config/opencode/oh-my-openagent.json;
     "opencode/package.json".source = ../config/opencode/package.json;
     "opencode/plugins/herdr-agent-state.js".source = ../config/opencode/plugins/herdr-agent-state.js;
