@@ -29,6 +29,7 @@
 
 # Disable specific steps - same options as the command line flag
 # disable = ["system", "emacs"]
+disable = ["nix", "nix_helper"]
 
 # Run these steps before all others
 # first = ["chezmoi"]
@@ -137,7 +138,8 @@ nix_handler = "nh"
 
 # Custom commands
 [commands]
-"Nixup (system + home)" = "nixup"
+"nh: os switch" = "nh os switch"
+"nh: home switch" = "nh home switch"
 
 
 [python]

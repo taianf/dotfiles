@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   ...
 }:
@@ -14,6 +15,10 @@
     spotify-player.enable = true;
     bun.enable = true;
     fzf.enable = true;
+    nh = {
+      enable = true;
+      flake = config.home.homeDirectory + "/dotfiles";
+    };
 
     zsh = {
       enable = true;
