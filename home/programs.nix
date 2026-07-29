@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   ...
 }:
@@ -19,10 +18,6 @@
     # with `env: 'node': No such file or directory`.
     nodejs.enable = true;
     fzf.enable = true;
-    nh = {
-      enable = true;
-      flake = config.home.homeDirectory + "/dotfiles";
-    };
 
     zsh = {
       enable = true;
