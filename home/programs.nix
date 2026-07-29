@@ -19,6 +19,9 @@
     # with `env: 'node': No such file or directory`.
     nodejs.enable = true;
     fzf.enable = true;
+    # Required for the `autojump` oh-my-zsh plugin: the plugin shells out to
+    # the `autojump` binary, which lives in the `programs.autojump` package.
+    programs.autojump.enable = true;
     nh = {
       enable = true;
       flake = config.home.homeDirectory + "/dotfiles";
