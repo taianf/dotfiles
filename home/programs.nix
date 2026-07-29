@@ -14,6 +14,10 @@
     spotify-player.enable = true;
     bun.enable = true;
     fzf.enable = true;
+    nh = {
+      enable = true;
+      flake = "/home/taian/dotfiles";
+    };
 
     zsh = {
       enable = true;

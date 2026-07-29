@@ -138,8 +138,8 @@ nix_handler = "nh"
 
 # Custom commands
 [commands]
-"nh: os switch" = "nh os switch ~/dotfiles#nixos"
-"nh: home switch" = "nh home switch ~/dotfiles#taian"
+"nh: os switch" = "nh os switch"
+"nh: home switch" = "nh home switch"
 
 
 [python]
