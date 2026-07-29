@@ -9,6 +9,9 @@ _: {
     topgrade.enable = true;
     spotify-player.enable = true;
     bun.enable = true;
+    fzf.enable = true;
+    zsh-autosuggestions.enable = true;
+    zsh-syntax-highlighting.enable = true;
 
     zsh = {
       enable = true;
@@ -16,8 +19,15 @@ _: {
         enable = true;
         theme = "robbyrussell";
         plugins = [
+          "autojump"
+          "brew"
+          "copybuffer"
+          "copyfile"
+          "dirhistory"
+          "dotenv"
           "git"
           "sudo"
+          "web-search"
         ];
       };
       initContent = ''
