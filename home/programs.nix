@@ -1,4 +1,8 @@
-_: {
+{
+  pkgs,
+  ...
+}:
+{
   programs = {
     ghostty = {
       enable = true;
@@ -10,8 +14,6 @@ _: {
     spotify-player.enable = true;
     bun.enable = true;
     fzf.enable = true;
-    zsh-autosuggestions.enable = true;
-    zsh-syntax-highlighting.enable = true;
 
     zsh = {
       enable = true;
@@ -30,6 +32,18 @@ _: {
           "web-search"
         ];
       };
+      plugins = [
+        {
+          name = "zsh-autosuggestions";
+          src = pkgs.zsh-autosuggestions;
+          file = "share/zsh-autosuggestions/zsh-autosuggestions.zsh";
+        }
+        {
+          name = "zsh-syntax-highlighting";
+          src = pkgs.zsh-syntax-highlighting;
+          file = "share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh";
+        }
+      ];
       initContent = ''
         export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
         export PATH="$HOME/dotfiles/bin:$HOME/.bun/bin:$PATH"
