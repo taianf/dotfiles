@@ -5,7 +5,7 @@
       "model": "opencode-go/kimi-k3",
       "fallback_models": [
         {
-          "model": "kimi-for-coding/kimi-k3"
+          "model": "opencode-go/kimi-k3"
         }
       ]
     },
@@ -13,7 +13,7 @@
       "model": "opencode-go/glm-5.2"
     },
     "librarian": {
-      "model": "opencode-go/qwen3.5-plus",
+      "model": "opencode-go/qwen3.7-max",
       "fallback_models": [
         {
           "model": "opencode-go/minimax-m3"
@@ -24,7 +24,7 @@
       ]
     },
     "explore": {
-      "model": "opencode-go/qwen3.5-plus",
+      "model": "opencode-go/qwen3.7-max",
       "fallback_models": [
         {
           "model": "opencode-go/minimax-m3"
@@ -42,7 +42,7 @@
       "variant": "high",
       "fallback_models": [
         {
-          "model": "kimi-for-coding/kimi-k3",
+          "model": "opencode-go/kimi-k3",
           "variant": "high"
         }
       ]
@@ -52,7 +52,7 @@
       "variant": "low",
       "fallback_models": [
         {
-          "model": "kimi-for-coding/kimi-k3",
+          "model": "opencode-go/kimi-k3",
           "variant": "low"
         }
       ]
@@ -88,7 +88,7 @@
       "model": "opencode-go/glm-5.2",
       "fallback_models": [
         {
-          "model": "kimi-for-coding/kimi-k3"
+          "model": "opencode-go/kimi-k3"
         }
       ]
     },
