@@ -99,8 +99,7 @@ nixup --verbose   # full output
 **not** catch missing/misspelled options in modules that are _enabled but
 not instantiated as top-level outputs_ (e.g. `programs.zsh.plugins`,
 custom plugin attrsets, activation scripts). It happily returns
-`all checks passed!` while a live `nixup` fails on `The option
-'programs.<x>' does not exist`.
+`all checks passed!` while a live `nixup` fails on `The option 'programs.<x>' does not exist`.
 
 Before shipping a Home Manager change, run:
 
