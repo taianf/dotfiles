@@ -13,6 +13,10 @@
     topgrade.enable = true;
     spotify-player.enable = true;
     bun.enable = true;
+    # Required for `codegraph` (Bun global install) whose launcher
+    # has `#!/usr/bin/env node`. Without this, `codegraph` errors
+    # with `env: 'node': No such file or directory`.
+    nodejs.enable = true;
     fzf.enable = true;
 
     zsh = {
