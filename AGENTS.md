@@ -93,6 +93,30 @@ nixup             # quiet (errors only)
 nixup --verbose   # full output
 ```
 
+### Verifying Home Manager changes
+
+`nix flake check --no-build` only checks the option-tree shape — it does
+**not** catch missing/misspelled options in modules that are _enabled but
+not instantiated as top-level outputs_ (e.g. `programs.zsh.plugins`,
+custom plugin attrsets, activation scripts). It happily returns
+`all checks passed!` while a live `nixup` fails on `The option 'programs.<x>' does not exist`.
+
+Before shipping a Home Manager change, run:
+
+```bash
+nixup --dry-run
+```
+
+`nixup --dry-run` runs `nix flake check`, parses every `*.nix` file, and
+builds `homeConfigurations.taian.activationPackage` end-to-end — so
+option resolution and `pkgs` references are fully evaluated without
+actually switching generations. Only then is the change safe to ship
+via a regular `nixup`.
+
+If `nixup --dry-run` passes but a live `nixup` still fails, the issue
+is at activation time (e.g. a `home.activation.*` script) rather than
+configuration evaluation.
+
 ### Updating
 
 ```bash
