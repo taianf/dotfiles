@@ -187,7 +187,11 @@ _: {
         };
         languages = {
           Python = {
-            language_servers = [ "!basedpyright" "ruff" "..." ];
+            language_servers = [
+              "!basedpyright"
+              "ruff"
+              "..."
+            ];
           };
         };
         code_actions_on_format = {
