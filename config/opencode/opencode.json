@@ -14,7 +14,6 @@
   "plugin": [
     "@dietrichgeber/ponytail",
     "oh-my-opencode-slim",
-    "oh-my-openagent",
     "opencode-goal-plugin",
     "opencode-pty",
     "opencode-supermemory"
