@@ -60,7 +60,11 @@ mkdir -p "${CONFIG}"
 # Mirror ~/.config/* -> ~/dotfiles/config/*.
 # --update: don't overwrite a newer file in the destination (defense in
 # depth; live is supposed to be newer or equal, but be safe).
-rsync -a --update "${EXCLUDES[@]}" "${HOME}/.config/" "${CONFIG}/"
+# --delete: remove files from the destination that are no longer in
+# the source (after the excludes). This keeps the repo in sync if a
+# user-edited file is removed from live — without --delete, stale
+# copies accumulate forever.
+rsync -a --update --delete "${EXCLUDES[@]}" "${HOME}/.config/" "${CONFIG}/"
 
 # Special-case files that don't live in ~/.config/ but are still
 # user-editable dotfiles.
