@@ -133,5 +133,6 @@
     seed "$HOME/dotfiles/config/opencode" "$HOME/.config/opencode"
     seed "$HOME/dotfiles/config/autostart/ferdium.desktop" "$HOME/.config/autostart/ferdium.desktop"
     seed "$HOME/dotfiles/config/cosmic/com.system76.CosmicComp/v1/keyboard_config" "$HOME/.config/cosmic/com.system76.CosmicComp/v1/keyboard_config"
+    seed "$HOME/dotfiles/config/omo/omo.jsonc" "$HOME/.omo/omo.jsonc"
   '';
 }
