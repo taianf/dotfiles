@@ -25,3 +25,62 @@ node_modules
 
 # Added by ggshield
 .cache_ggshield
+
+# === config/ runtime state ===
+# config/ holds symlink-source files for `xdg.configFile`/`home.file`.
+# Everything below is app runtime state (caches, sockets, profile dbs)
+# that should NEVER be added to the repo. They're not symlinked anywhere;
+# they end up in `config/` only via manual `git add` or rsync mistakes.
+# If you want to track any of these, remove the pattern AND add a
+# `xdg.configFile`/`home.file` entry in `home/config-files.nix`.
+
+# Browser / Electron runtime
+config/mozilla/
+config/chromium/
+config/ferdium/
+config/google-chrome/
+config/BraveSoftware/
+config/discord/
+config/slack/
+config/Signal/
+config/Spotify/
+config/steam/
+config/Code/
+config/Cursor/
+
+# XDG / desktop runtime
+config/ibus/
+config/pulse/
+config/qt5ct/
+config/qt6ct/
+config/gtk-3.0/
+config/gtk-4.0/
+config/nautilus/
+config/systemd/
+config/epiphany/
+config/evolution/
+config/kilo/
+config/herdr/
+config/home-manager/
+config/nix/
+config/sops/
+config/age/
+config/monitors.xml
+config/mimeapps.list
+config/user-dirs.dirs
+config/user-dirs.locale
+config/gnome-initial-setup-done
+config/cosmic-initial-setup-done
+config/cosmic-mimeapps.list
+config/.gsd-keyboard.settings-ported
+
+# topgrade symlink leftovers (topgrade creates these on every run)
+config/topgrade.toml.backup
+config/topgrade.toml.real
+
+# opencode runtime artifacts (not user-editable config)
+config/opencode/skills/
+config/opencode/.oh-my-opencode-slim/
+config/opencode/AGENTS.md
+config/opencode/test-via-write
+config/opencode/*.backup
