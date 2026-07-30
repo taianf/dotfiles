@@ -19,9 +19,12 @@
     uv = {
       enable = true;
       settings = {
-        # Don't auto-download Python — use nixpkgs Python or uv-managed only
-        python-downloads = "automatic";
-        python-preference = "managed-then-system";
+        # On NixOS, system Python is provided by nixpkgs. Don't let uv
+        # auto-download its own interpreter (which would land in
+        # ~/.local/share/uv/python and bypass the Nix store); prefer
+        # system Python for `uv run` etc.
+        python-downloads = "never";
+        python-preference = "only-system";
       };
     };
 
