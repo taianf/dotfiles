@@ -207,7 +207,6 @@ handlers.json
 key4.db
 logins.json
 logins-backup.json
-minidumps
 NetworkPerformanceTelemetry*
 permissions.sqlite
 pkcs11.txt
