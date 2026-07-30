@@ -20,14 +20,16 @@ cd ~/dotfiles && git push
 
 ## The two halves
 
-| Direction | Trigger | Tool | What it does |
-|---|---|---|---|
-| Live → repo | systemd path unit watches `~/.config` | `bin/sync-dotfiles` | `rsync` with excludes → `git add -A` → `git commit` → `git push` |
-| Repo → live | `default.target` on boot | `bin/sync-dotfiles-on-boot` | `git pull --rebase` → `cp -r` for files missing in live (additive only) |
+- **Live → repo** (auto, on every change): a systemd path unit watches
+  `~/.config`; on any change, `bin/sync-dotfiles` runs `rsync` with
+  excludes, then `git add -A && git commit && git push origin main`.
+- **Repo → live** (additive, on boot): `bin/sync-dotfiles-on-boot`
+  runs at `default.target`, does `git pull --rebase`, then `cp -r`
+  any files missing in live. Never overwrites an existing live file.
 
 **Live always wins.** If a file exists at `~/.config/foo` and also at
 `~/dotfiles/config/foo`, the live file is canonical. The boot-time
-pull will *never* overwrite it. New files added in a commit *do*
+pull will _never_ overwrite it. New files added in a commit _do_
 appear in `~/.config/` on next boot, because the live file is missing
 in that case.
 
@@ -49,14 +51,14 @@ The `bin/sync-dotfiles` rsync mirrors `~/.config/` to
 `~/dotfiles/config/`. A few files outside `~/.config/` are handled
 explicitly:
 
-| Live | Repo |
-|---|---|
-| `~/.zshrc` | `config/zsh/.zshrc` |
-| `~/.config/zed/settings.json` | `config/zed/settings.json` |
-| `~/.config/ghostty/config` | `config/ghostty/config` |
-| `~/.config/topgrade.toml` | `config/topgrade.toml` |
-| `~/.config/opencode/...` | `config/opencode/...` |
-| `~/.config/autostart/ferdium.desktop` | `config/autostart/ferdium.desktop` |
+| Live                                   | Repo                                |
+| -------------------------------------- | ----------------------------------- |
+| `~/.zshrc`                             | `config/zsh/.zshrc`                 |
+| `~/.config/zed/settings.json`          | `config/zed/settings.json`          |
+| `~/.config/ghostty/config`             | `config/ghostty/config`             |
+| `~/.config/topgrade.toml`              | `config/topgrade.toml`              |
+| `~/.config/opencode/...`               | `config/opencode/...`               |
+| `~/.config/autostart/ferdium.desktop`  | `config/autostart/ferdium.desktop`  |
 | `~/.config/cosmic/.../keyboard_config` | `config/cosmic/.../keyboard_config` |
 
 To add a new file: commit it to `config/`, then add a corresponding

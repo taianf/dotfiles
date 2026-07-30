@@ -67,8 +67,8 @@ Entry point is `home.nix`, which imports domain modules from `home/`:
 - `config-files.nix` — empty. Legacy XDG file entries have moved to
   the file-based sync model.
 - `services.nix` — systemd user services: `dotfiles-sync` (path unit
-  + oneshot that runs `bin/sync-dotfiles`), `dotfiles-sync-on-boot`
-  (oneshot that runs `bin/sync-dotfiles-on-boot`), `ferdium` (autostart).
+  - oneshot that runs `bin/sync-dotfiles`), `dotfiles-sync-on-boot`
+    (oneshot that runs `bin/sync-dotfiles-on-boot`), `ferdium` (autostart).
 
 ## Setup on a new machine
 
