@@ -66,21 +66,11 @@
           file = "share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh";
         }
       ];
-      initContent = ''
-        export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
-        export PATH="$HOME/dotfiles/bin:$HOME/.bun/bin:$PATH"
-        source $HOME/dotfiles/zsh/completions/_nixflix 2>/dev/null
-        eval "$(COMPLETE=zsh prek)"
-
-        docker() {
-          if [ "$1" = "compose" ]; then
-            shift
-            command podman compose "$@"
-          else
-            command podman "$@"
-          fi
-        }
-      '';
+      # initContent is intentionally empty: the actual ~/.zshrc content
+      # lives in config/zsh/.zshrc and is seeded/copied via
+      # home.activation.seed-dotfiles (see below). Editing ~./.zshrc in
+      # place is the supported workflow; the systemd path unit
+      # auto-mirrors the change back to the repo. See SYNC.md.
     };
 
     git = {
@@ -91,147 +81,12 @@
 
     zed-editor = {
       enable = true;
-      mutableUserSettings = true;
       extensions = [ "nix" ];
-      userSettings = {
-        format_on_save = "on";
-        autosave = "on_focus_change";
-        git_panel = {
-          tree_view = true;
-        };
-        diff_view_style = "unified";
-        project_panel = {
-          dock = "left";
-        };
-        agent_servers = {
-          kilo = {
-            type = "registry";
-          };
-          opencode = {
-            default_config_options = {
-              model = "opencode/deepseek-v4-flash-free";
-            };
-            type = "registry";
-          };
-        };
-        cli_default_open_behavior = "existing_window";
-        agent = {
-          tool_permissions = {
-            tools = {
-              fetch = {
-                default = "allow";
-              };
-              terminal = {
-                default = "allow";
-                always_allow = [
-                  {
-                    pattern = "^cat\\s+\\~/\\.config/zed/settings\\.json(\\s|$)";
-                  }
-                  {
-                    pattern = "^wc\\b";
-                  }
-                  {
-                    pattern = "^nix\\s+search(\\s|$)";
-                  }
-                  {
-                    pattern = "^head\\b";
-                  }
-                  {
-                    pattern = "^echo\\b";
-                  }
-                  {
-                    pattern = "^grep\\b";
-                  }
-                  {
-                    pattern = "^which\\s+age-keygen(\\s|$)";
-                  }
-                  {
-                    pattern = "^which\\s+age(\\s|$)";
-                  }
-                  {
-                    pattern = "^which\\s+sops(\\s|$)";
-                  }
-                  {
-                    pattern = "^ls\\s+/etc/age/(\\s|$)";
-                  }
-                  {
-                    pattern = "^ls\\s+\\~/\\.config/sops/age/(\\s|$)";
-                  }
-                  {
-                    pattern = "^nix-shell\\b";
-                  }
-                ];
-              };
-            };
-          };
-          default_model = {
-            provider = "opencode";
-            model = "free/big-pickle";
-            enable_thinking = false;
-          };
-          favorite_models = [
-            {
-              provider = "openrouter";
-              model = "openrouter/free";
-              enable_thinking = true;
-            }
-            {
-              provider = "openrouter";
-              model = "openrouter/auto";
-              enable_thinking = true;
-            }
-            {
-              provider = "openrouter";
-              model = "openrouter/auto-beta";
-              enable_thinking = true;
-            }
-            {
-              provider = "opencode";
-              model = "free/big-pickle";
-              enable_thinking = false;
-            }
-          ];
-          model_parameters = [ ];
-        };
-        lsp = {
-          ruff = {
-            settings = {
-              select = [ "I" ];
-              lint = {
-                select = [ "I" ];
-              };
-            };
-          };
-          pyright = {
-            settings = { };
-          };
-        };
-        languages = {
-          Python = {
-            language_servers = [
-              "!basedpyright"
-              "ruff"
-              "..."
-            ];
-          };
-        };
-        code_actions_on_format = {
-          "source.fixAll.ruff" = true;
-          "source.organizeImports.ruff" = true;
-        };
-        ui_font_size = 16;
-        buffer_font_size = 15;
-        theme = {
-          mode = "system";
-          light = "One Light";
-          dark = "One Dark";
-        };
-        terminal = {
-          shell = {
-            program = "/home/taian/.nix-profile/bin/zsh";
-          };
-        };
-      };
+      # The user-editable settings live in config/zed/settings.json and
+      # are seeded to ~/.config/zed/settings.json by
+      # home.activation.seed-dotfiles (see below). We deliberately do
+      # NOT set `userSettings` or `mutableUserSettings` here: the file
+      # is fully owned by the user, with the repo as a mirror. See SYNC.md.
     };
   };
 
@@ -249,5 +104,31 @@
     if ! command -v codegraph >/dev/null 2>&1; then
       ${pkgs.bun}/bin/bun add -g @colbymchenry/codegraph
     fi
+  '';
+
+  # First-install (and idempotent) seed of user-editable dotfiles from
+  # ~/dotfiles/config/* to the live XDG locations. The model is:
+  #   - repo is the source for the INITIAL content (this seed)
+  #   - live (~/.config/..., ~/.zshrc) is the source thereafter
+  #   - bin/sync-dotfiles (systemd path unit) auto-mirrors live -> repo
+  # Seed is `--no-clobber`: existing live files (already edited) are
+  # never overwritten. Safe to run on every activation. See SYNC.md.
+  home.activation.seed-dotfiles = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    seed() {
+      local src="$1" dst="$2"
+      if [ ! -e "$dst" ] && [ -e "$src" ]; then
+        mkdir -p "$(dirname "$dst")"
+        cp -r "$src" "$dst"
+        echo "Seeded: $dst"
+      fi
+    }
+
+    seed "$HOME/dotfiles/config/zsh/.zshrc" "$HOME/.zshrc"
+    seed "$HOME/dotfiles/config/zed/settings.json" "$HOME/.config/zed/settings.json"
+    seed "$HOME/dotfiles/config/ghostty/config" "$HOME/.config/ghostty/config"
+    seed "$HOME/dotfiles/config/topgrade.toml" "$HOME/.config/topgrade.toml"
+    seed "$HOME/dotfiles/config/opencode" "$HOME/.config/opencode"
+    seed "$HOME/dotfiles/config/autostart/ferdium.desktop" "$HOME/.config/autostart/ferdium.desktop"
+    seed "$HOME/dotfiles/config/cosmic/com.system76.CosmicComp/v1/keyboard_config" "$HOME/.config/cosmic/com.system76.CosmicComp/v1/keyboard_config"
   '';
 }
