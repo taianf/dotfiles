@@ -33,4 +33,9 @@ _: {
     "opencode/tui.json".source = ../config/opencode/tui.json;
     "topgrade.toml".source = ../config/topgrade.toml;
   };
+
+  # oh-my-openagent config — lives at ~/.omo/ (not ~/.config/omo/), so it
+  # needs `home.file` rather than `xdg.configFile`. Symlinked from the
+  # repo so the agent model assignments are reproducible.
+  home.file.".omo/omo.jsonc".source = ../config/omo/omo.jsonc;
 }
