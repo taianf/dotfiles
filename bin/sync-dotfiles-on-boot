@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# bin/sync-dotfiles-on-boot: runs at graphical-session.target.
+# Pulls main, then copies any *new* (not present in live) config files
+# from the repo to ~/.config. NEVER overwrites an existing live file
+# (live wins). This complements bin/sync-dotfiles, which goes the
+# other way (live -> repo) on every change.
+set -euo pipefail
+
+DOTFILES="${HOME}/dotfiles"
+CONFIG="${DOTFILES}/config"
+
+cd "${DOTFILES}"
+
+# Best-effort pull. If it fails (no network, etc.), skip the deploy
+# step — the next sync-dotfiles run will still capture any local edits.
+if ! git pull --rebase --autostash origin main 2>/dev/null; then
+  echo "dotfiles-sync-on-boot: pull failed (no network?); skipping deploy"
+  exit 0
+fi
+
+# Additive deploy: for every file in ~/dotfiles/config/, copy to
+# ~/.config/ ONLY if the live file does not exist. This is the
+# "new configs added in a commit appear on next boot" half.
+deploy() {
+  local src="$1" dst="$2"
+  if [ ! -e "$dst" ] && [ -e "$src" ]; then
+    mkdir -p "$(dirname "$dst")"
+    cp -r "$src" "$dst"
+    echo "deployed: $dst"
+  fi
+}
+
+deploy "${CONFIG}/zsh/.zshrc" "${HOME}/.zshrc"
+deploy "${CONFIG}/zed/settings.json" "${HOME}/.config/zed/settings.json"
+deploy "${CONFIG}/ghostty/config" "${HOME}/.config/ghostty/config"
+deploy "${CONFIG}/topgrade.toml" "${HOME}/.config/topgrade.toml"
+deploy "${CONFIG}/opencode" "${HOME}/.config/opencode"
+deploy "${CONFIG}/autostart/ferdium.desktop" "${HOME}/.config/autostart/ferdium.desktop"
+deploy "${CONFIG}/cosmic/com.system76.CosmicComp/v1/keyboard_config" "${HOME}/.config/cosmic/com.system76.CosmicComp/v1/keyboard_config"
