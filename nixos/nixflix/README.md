@@ -87,7 +87,6 @@ to wire the stack together per the
 | `prowlarr-indexers.service`       | Adds the indexers declared in `nixflix.prowlarr.config.indexers` |
 | `radarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Radarr      |
 | `sonarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Sonarr      |
-| `bazarr-setup.service`            | Enables providers, score ≥ 90, sync, 3 AM scan                   |
 | `seerr-setup.service`             | Initial Seerr setup: connect to Jellyfin, sync libraries         |
 | `seerr-jellyfin.service`          | Maintain Seerr ↔ Jellyfin host settings                          |
 | `seerr-radarr.service`            | Maintain Seerr → Radarr instance(s)                              |
@@ -105,10 +104,12 @@ nixflix check       # verify all services and integrations
 
 ### OpenSubtitles.com API key
 
-`bazarr-setup` enables OpenSubtitles as a provider but cannot configure
-credentials without a secret. Add the free API key via the Bazarr UI
-(`Settings → Providers → OpenSubtitles.com`) — the provider slot is
-already wired.
+Bazarr's `config.yaml` is pre-written by `services.bazarr.preStart` to enable
+Addic7ed, Podnapisi, and OpenSubtitles, with Sonarr/Radarr connections wired
+to the same sops-managed API keys. Provider credentials (e.g. the
+OpenSubtitles.com API key) still need to be entered via the Bazarr UI
+(`Settings → Providers → OpenSubtitles.com`) — the provider slot is already
+wired.
 
 ## Resources
 
