@@ -4,6 +4,9 @@
 #
 # Whenever you add a new tracked app (e.g., a new editor or terminal),
 # add its cache/state subdirs here so they don't end up in the repo.
+#
+# Tuned against Chrome 126+, Ferdium 6.x, Firefox 130+, VSCode 1.9x,
+# Cursor 0.4x. Re-verify if you upgrade any of those.
 
 # === Editor / OS metadata ===
 *.swp
