@@ -8,9 +8,22 @@
 with lib;
 {
   sops.secrets = {
-    "sonarr/api_key" = { };
+    "sonarr/api_key" = {
+      # The Bazarr pre-start script (running as User=bazarr, Group=bazarr)
+      # needs to read the Sonarr and Radarr API keys to write bazarr's
+      # config.yaml. The 'media' group is shared by bazarr, sonarr, and
+      # radarr, so group=media + mode=0440 lets bazarr read them without
+      # making them world-readable. sops-nix defaults (root:root, 0400)
+      # would block bazarr's pre-start with "Permission denied".
+      group = "media";
+      mode = "0440";
+    };
     "sonarr/password" = { };
-    "radarr/api_key" = { };
+    "radarr/api_key" = {
+      # See comment on sonarr/api_key above.
+      group = "media";
+      mode = "0440";
+    };
     "radarr/password" = { };
     "lidarr/api_key" = { };
     "lidarr/password" = { };
