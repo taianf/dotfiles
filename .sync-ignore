@@ -171,3 +171,148 @@ pending_reports
 # ~/.config/systemd/
 # ~/.config/user-dirs.dirs
 # ~/.config/user-dirs.locale
+
+# === ROUND 2: Firefox profile internals (matches everything below
+# config/mozilla/firefox/<profile>/...) ===
+
+# Firefox profile top-level files (all runtime state)
+AddonStore*
+AlternateServices.bin
+ExperimentStoreData.json
+SiteSecurityServiceState.bin
+addons.json
+addonStartup.json.lz4
+bounce-tracking-protection.sqlite
+breach-alerts.db
+broadcast-listeners.json
+cert9.db
+client_id.txt
+compatibility.ini
+containers.json
+content-prefs.sqlite
+cookies.sqlite
+cookies.sqlite-shm
+cookies.sqlite-wal
+crashes
+data.safe.bin
+data.sqlite
+datareporting
+extension-settings.json
+extensions
+favicons.sqlite
+formhistory.sqlite
+gmp-gmpopenh264
+gmp-widevinecdm
+handlers.json
+key4.db
+logins.json
+logins-backup.json
+minidumps
+NetworkPerformanceTelemetry*
+permissions.sqlite
+pkcs11.txt
+places.sqlite
+prefs.js
+protections.sqlite
+search.json.mozlz4
+search.sqlite
+sessionstore.jsonlz4
+sessionstore-backups
+storage
+times.json
+user.js
+weave
+webappsstore.sqlite
+xulstore.json
+
+# Firefox profile subdirs (all runtime/cache)
+Cache
+cache2
+OfflineCache
+"Code Cache"
+GPUCache
+startupCache
+thumbnails
+safebrowsing
+security_state
+Network Persistent Storage
+
+# Firefox bookmark backups (auto-generated, not user-edited)
+bookmarkbackups
+
+# Compressed/archived files common in firefox profiles
+*.jsonlz4
+*.jsonlz4-*
+*.mozlz4
+*.bak
+*.old
+*.sqlite.bak
+
+# Firefox mail/news (rare but possible)
+Mail
+ImapMail
+NewsBleed
+
+# === XDG / desktop runtime state ===
+mimeapps.list
+monitors.xml
+user-dirs.dirs
+user-dirs.locale
+gnome-initial-setup-done
+cosmic-initial-setup-done
+cosmic-mimeapps.list
+.gsd-keyboard.settings-ported
+
+# === ibus / input method runtime ===
+# config/ibus/bus/ contains unix socket files; pure runtime
+bus
+
+# === PulseAudio / Qt / GTK runtime config ===
+pulse
+qt5ct
+qt6ct
+gtk-3.0
+
+# === nix / sops runtime caches ===
+# config/nix/ holds nix metadata; config/sops/ holds sops age keys
+nix
+sops
+age
+
+# === opencode auto-installed runtime ===
+# - skills/ is populated by `bun add` of oh-my-opencode-slim plugins
+# - .oh-my-opencode-slim/ is a cache
+# - *.backup is topgrade-style "save before edit" leftovers
+# - test-via-write is a tmp file dropped by some test harness
+# - AGENTS.md is ignored per user decision (can be re-added via
+#   seed-dotfiles if it becomes important)
+opencode/skills
+opencode/.oh-my-opencode-slim
+opencode/AGENTS.md
+opencode/test-via-write
+opencode/.gitignore.backup
+*.backup
+
+# === topgrade's symlink-resolution leftovers ===
+# topgrade rewrites topgrade.toml as a symlink to topgrade.toml.real,
+# saving the previous version as topgrade.toml.backup. Both are noise.
+topgrade.toml.backup
+topgrade.toml.real
+
+# === herdr runtime (config.toml is small user config; we keep
+# the directory, but the session file is pure runtime) ===
+herdr/session.json
+
+# === kilo (opencode agent) ===
+# Default config is essentially empty; if you start customizing,
+# remove this ignore and seed it via seed-dotfiles.
+kilo/kilo.jsonc
+
+# === Legacy home-manager config dropped here by an old
+# `nix run home-manager init`. The real home.nix is at the repo
+# root; this directory is just a bootstrap artifact. ===
+home-manager
+
+# === ibus: also kill the whole config (pure runtime) ===
+# (Uncomment if you want a hard kill; comment to inspect what's there.)
+# ibus
