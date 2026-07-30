@@ -8,17 +8,25 @@ NixOS + Home Manager configuration managed as a Git repo.
 dotfiles/
 ├── flake.nix                      # Flake entry point (inputs, NixOS + Home Manager outputs)
 ├── home.nix                       # Home Manager entry point (imports home/ modules)
+├── SYNC.md                        # Dotfile sync workflow (live wins, repo mirrors)
+├── AGENTS.md                      # Agent instructions for AI coding tools
 ├── .pre-commit-config.yaml        # Pre-commit hooks (nixfmt, ruff, etc.)
+├── .sync-ignore                   # rsync excludes for bin/sync-dotfiles
 ├── .gitignore
 ├── secrets.yaml                   # Encrypted secrets (sops-nix) — safe to commit
-├── AGENTS.md                      # Agent instructions for AI coding tools
 ├── bin/                           # Custom scripts (added to PATH)
-│   └── secrets                    # Manage encrypted secrets
-├── home/                          # Home Manager domain modules
-│   ├── packages.nix               # User packages (ferdium, google-chrome, sops, etc.)
-│   ├── config-files.nix           # XDG config file symlinks (zed, topgrade, opencode)
-│   ├── programs.nix               # Program configuration (zsh, git, ghostty, etc.)
-│   └── services.nix               # Systemd user services (dotfiles-sync, ferdium)
+│   ├── nixup                      # Rebuild script
+│   ├── nixflix                    # CLI wrapper for the media stack
+│   ├── sync-dotfiles              # Auto-sync live -> repo (called by systemd path unit)
+│   └── sync-dotfiles-on-boot      # Additive repo -> live on boot
+├── config/                        # User-editable dotfiles (mirrored to ~/.config/ and ~/)
+│   ├── zsh/.zshrc
+│   ├── zed/settings.json
+│   ├── ghostty/config
+│   ├── topgrade.toml
+│   ├── opencode/...
+│   ├── autostart/ferdium.desktop
+│   └── cosmic/.../keyboard_config
 └── nixos/
     ├── configuration.nix          # Main NixOS config — symlinked to /etc/nixos/
     ├── default.nix                # Shared NixOS config (imported by all machines)
@@ -29,42 +37,38 @@ dotfiles/
     ├── users.nix                  # User account
     ├── nvidia.nix                 # Nvidia GPU module (imported per-machine if needed)
     ├── sops.nix                   # Sops-nix secrets config
-    └── nixflix/
-        └── default.nix            # Nixflix media stack config
+    └── nixflix/                   # Nixflix media stack config
+        └── default.nix
 ```
 
 ## How it works
 
-Two layers of Nix manage your system:
+Two layers of Nix manage your system, plus a file-based dotfile sync
+on top:
 
 - **NixOS** (system) — `dotfiles/nixos/` (symlinked to `/etc/nixos/`):
   Boot, hardware, networking, services, secrets
 - **Home Manager** (user) — `dotfiles/home.nix` + `dotfiles/home/`:
-  Packages, dotfiles sync, shell, git, symlinks
-
-### NixOS (`dotfiles/nixos/`)
-
-- `configuration.nix` — main config, symlinked to `/etc/nixos/configuration.nix`.
-  Imports `default.nix` and machine-specific modules.
-- `default.nix` — shared config for all machines; imports domain modules:
-  - `locale.nix` — timezone, locale, keymap
-  - `desktop.nix` — display manager, desktop environments, audio, SSH
-  - `programs.nix` — nix-ld, firefox, zsh
-  - `hardware.nix` — system packages, podman, i2c
-  - `users.nix` — user account
-- `hardware-configuration.nix` — auto-generated per machine, stays in `/etc/nixos/`. Not in repo.
-- `nvidia.nix` — Nvidia GPU config (imported per-machine if needed).
-- `sops.nix` — sops-nix secrets config.
-- `nixflix/` — Nixflix media stack (Sonarr, Radarr, Jellyfin, etc.).
+  Packages, programs, dotfiles seeding, systemd user services
+- **Live dotfiles** — `dotfiles/config/*` are real files in `~/` and
+  `~/.config/`, auto-synced to the repo. See [SYNC.md](./SYNC.md).
 
 ### Home Manager (`dotfiles/home/`)
 
 Entry point is `home.nix`, which imports domain modules from `home/`:
 
-- `packages.nix` — user packages (ferdium, google-chrome, sops, etc.)
-- `config-files.nix` — XDG config symlinks (zed, topgrade, opencode)
-- `programs.nix` — program config (zsh, git, ghostty, etc.)
-- `services.nix` — systemd user services (dotfiles-sync, ferdium)
+- `packages.nix` — user packages that have no `programs.*` module
+  (`ferdium`, `google-chrome`, `sops`, `prek`, `nixfmt`, `ggshield`,
+  `nh`, `nil`, `nixd`, `python3`, `statix`, `wget`, `herdr`).
+- `programs.nix` — `programs.*` configuration: zsh, git, ghostty,
+  opencode, fzf, bun, **uv**, **npm** (replaces ad-hoc `nodejs` in
+  `home.packages`), topgrade, gh, spotify-player, zed-editor (package
+  only — settings are file-based), autojump, codegraph activation.
+- `config-files.nix` — empty. Legacy XDG file entries have moved to
+  the file-based sync model.
+- `services.nix` — systemd user services: `dotfiles-sync` (path unit
+  + oneshot that runs `bin/sync-dotfiles`), `dotfiles-sync-on-boot`
+  (oneshot that runs `bin/sync-dotfiles-on-boot`), `ferdium` (autostart).
 
 ## Setup on a new machine
 
@@ -101,9 +105,9 @@ If the machine has an Nvidia GPU, uncomment `./nvidia.nix` in the imports. If no
 ### 5. First rebuild
 
 ```bash
-# This will fail the first time because hardware-configuration.nix is missing.
-# After step 2, it should work.
-sudo nixos-rebuild switch
+nixup             # System + Home Manager, errors-only by default
+nixup --verbose   # Stream full output
+nixup --dry-run   # Check + parse + build activation package, do not switch
 ```
 
 ### 6. Set up secrets (sops-nix)
@@ -169,51 +173,62 @@ The encrypted `secrets.yaml` is safe to commit. To add another machine's SSH hos
 sops updatekeys secrets.yaml
 ```
 
-### 7. Activate Home Manager
+### 7. Activate Home Manager (handled by `nixup` from step 5)
 
-```bash
-nix run home-manager -- init --switch ~/dotfiles -b backup
-```
+`nixup` runs `nixos-rebuild` and `home-manager` independently. The
+seed-dotfiles activation copies `~/dotfiles/config/*` into
+`~/.config/*` (and `~/.zshrc`) on the first run, so dotfiles are
+ready immediately.
 
 ### 8. Enable pre-commit hooks (optional)
 
 ```bash
-pre-commit install
+git config --local core.hooksPath .git/hooks
+uvx prek install --overwrite
 ```
+
+See [AGENTS.md](./AGENTS.md) for the per-machine prek install
+workaround when a global `core.hooksPath` is set.
 
 ## Applying changes
 
-After editing NixOS config (`dotfiles/nixos/`):
-
 ```bash
-sudo nixos-rebuild switch --impure --flake ~/dotfiles#nixos
-```
-
-After editing Home Manager config (`home/` modules or `home.nix`):
-
-```bash
-home-manager init --switch ~/dotfiles
-```
-
-Or use the shorthand:
-
-```bash
+# After editing NixOS config (dotfiles/nixos/) or Home Manager
+# (home/ modules, home.nix):
 nixup
+
+# Dotfile edits in ~/.config/ or ~/.zshrc auto-commit within seconds
+# via bin/sync-dotfiles (systemd path unit). Push when ready:
+cd ~/dotfiles && git push
 ```
+
+See [SYNC.md](./SYNC.md) for the full sync workflow.
 
 ## Key concepts
 
-- **`nix-ld`** — enabled in shared config so uv, and other tools that download
-  dynamically linked binaries, work on NixOS.
-- **`dotfiles-sync.service`** — a user-level systemd service defined in
-  `home/services.nix` that runs `git pull` on boot to keep dotfiles up to date.
-- **Dotfile symlinks** — `home/config-files.nix` uses `mkOutOfStoreSymlink` to symlink
-  `.config/zsh` and `.zshenv` from this repo into your home, so edits in the
-  repo take effect immediately.
-- **`*.bak` files** — gitignored; used for local backups before config changes.
+- **`nix-ld`** — enabled in shared config so uv and other tools that
+  download dynamically linked binaries work on NixOS.
+- **`programs.*` over `home.packages`** — when a Home Manager module
+  exists (e.g. `programs.uv`, `programs.npm`), use it. `home.packages`
+  is for packages with no module (Electron apps, single-binary CLIs,
+  LSP servers). See `AGENTS.md`.
+- **Live dotfiles, repo mirror** — every config the user wants to
+  tweak lives as a real file in `~/.config/` (or `~/.zshrc`). The
+  repo is an auto-synced mirror. See [SYNC.md](./SYNC.md).
+- **`dotfiles-sync.path`** — a systemd user path unit watches
+  `~/.config` for changes. On any change, `bin/sync-dotfiles` runs and
+  mirrors live → repo with `rsync` (excludes from `.sync-ignore`),
+  then `git add -A && git commit && git push`.
+- **`dotfiles-sync-on-boot.service`** — pulls main on boot, then
+  ADDITIVE-deploys new files (where live is missing) to `~/.config/`.
+  Never overwrites an existing live file.
+- **`bin/nixup`** — the canonical rebuild script. Runs the system
+  and home rebuilds independently and prints a per-step summary.
+- **`*.bak` files** — gitignored; used for local backups before
+  config changes.
 - **sops-nix** — uses each machine's SSH host key
-  (`/etc/ssh/ssh_host_ed25519_key`) to decrypt `secrets.yaml`. No extra key
-  management needed.
+  (`/etc/ssh/ssh_host_ed25519_key`) to decrypt `secrets.yaml`. No extra
+  key management needed.
 
 ## Useful commands
 
@@ -225,11 +240,17 @@ home-manager news
 nix flake update
 
 # Edit encrypted secrets
-secrets edit         # opens sops editor
-secrets show         # decrypt and print all secrets
+nixflix secrets edit      # opens sops editor
+nixflix secrets show      # decrypt and print all secrets
 
-# Restart all nixflix services (after changing passwords)
-nixflix-restart
+# Nixflix media stack (Sonarr, Radarr, Jellyfin, etc.)
+nixflix restart           # restart all services
+nixflix refresh           # re-run config oneshot services
+nixflix clean             # wipe state data + recreate dirs
+nixflix full-refresh      # clean + rebuild + re-apply config
+nixflix setup             # recreate jellyfin directories
+nixflix check             # health check (services + API + integrations)
+nixflix secrets {edit|show}
 
 # Add another machine's key to secrets
 sops updatekeys secrets.yaml
