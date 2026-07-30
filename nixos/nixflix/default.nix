@@ -299,6 +299,88 @@ with lib;
         '';
     };
 
+    # Bazarr setup: configures languages, providers, and quality settings via the Bazarr
+    # API after the service is running. Uses form-encoded POST to /api/system/settings.
+    # This is the mechanism that re-applies settings after nixflix full-refresh — the
+    # preStart only writes config.yaml (bootstrap), but Bazarr stores languages/providers
+    # in its database, so they must be set via API on subsequent runs.
+    bazarr-setup = {
+      description = "Configure Bazarr languages, providers, and quality settings via API";
+      after = [
+        "bazarr.service"
+        "network-online.target"
+      ];
+      requires = [ "bazarr.service" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        Restart = "on-failure";
+        RestartSec = "10s";
+        LoadCredential = [
+          "bazarr_api_key:${config.sops.secrets."bazarr/api_key".path}"
+        ];
+      };
+
+      script =
+        let
+          bazarrPort = toString config.services.bazarr.listenPort;
+          curl = "${pkgs.curl.bin}/bin/curl";
+        in
+        ''
+          set -eu
+
+          BAZARR_API_KEY=$(cat /run/credentials/bazarr-setup.service/bazarr_api_key)
+          BAZARR_URL="http://127.0.0.1:${bazarrPort}/api"
+
+          echo "Waiting for Bazarr API..."
+          for i in $(seq 1 60); do
+            if ${curl} -sf "$BAZARR_URL/system/settings" \
+              -H "X-Api-Key: $BAZARR_API_KEY" > /dev/null 2>&1; then
+              echo "Bazarr API ready"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "Timed out waiting for Bazarr"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "Configuring Bazarr languages, providers, and quality settings..."
+
+          HTTP_CODE=$(${curl} -s -o /tmp/bazarr_setup_response -w "%{http_code}" \
+            -X POST "$BAZARR_URL/system/settings" \
+            -H "X-Api-Key: $BAZARR_API_KEY" \
+            -d 'settings-general-use_sonarr=true' \
+            -d 'settings-general-use_radarr=true' \
+            -d 'settings-general-minimum_score=90' \
+            -d 'settings-general-minimum_score_movie=90' \
+            -d 'settings-general-use_postprocessing=true' \
+            -d 'settings-general-postprocessing_threshold=90' \
+            -d 'settings-general-serie_default_enabled=true' \
+            -d 'settings-general-serie_default_profile=1' \
+            -d 'settings-general-movie_default_enabled=true' \
+            -d 'settings-general-movie_default_profile=1' \
+            -d 'settings-general-enabled_providers=addic7ed' \
+            -d 'settings-general-enabled_providers=podnapisi' \
+            -d 'settings-general-enabled_providers=opensubtitles' \
+            -d 'languages-enabled=pb' \
+            -d 'languages-enabled=en' \
+            -d 'languages-profiles=[{"profileId":1,"name":"pt-BR + en","cutoff":1,"items":[{"id":1,"language":"pb","audio_exclude":false,"forced":false,"hi":false},{"id":2,"language":"en","audio_exclude":false,"forced":false,"hi":false}],"mustContain":"","mustNotContain":"","originalFormat":null,"tag":""}]')
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "Bazarr setup failed (HTTP $HTTP_CODE):"
+            cat /tmp/bazarr_setup_response
+            exit 1
+          fi
+
+          echo "Bazarr languages, providers, and quality settings applied"
+        '';
+    };
+
     # Radarr → Jellyfin Connect notification: tells Jellyfin to refresh its library
     # whenever Radarr imports a movie. Mirrors Step 3 of the Jellyfin Full Automation
     # Guide (2026). Idempotent: matches by MediaBrowser implementation, creates if
