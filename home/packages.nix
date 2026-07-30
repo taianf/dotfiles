@@ -17,12 +17,11 @@
       nh
       nil
       nixd
-      prek
       nixfmt
+      prek
       python3
       sops
       statix
-      uv
       wget
     ]
     ++ [
