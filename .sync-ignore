@@ -226,7 +226,6 @@ webappsstore.sqlite
 xulstore.json
 
 # Firefox profile subdirs (all runtime/cache)
-Cache
 cache2
 OfflineCache
 startupCache
