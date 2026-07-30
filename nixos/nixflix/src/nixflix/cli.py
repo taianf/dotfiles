@@ -39,7 +39,7 @@ def clean():
     for svc in SERVICES:
         run(f"sudo systemctl stop {svc}.service 2>/dev/null || true")
     print("Removing all state data...")
-    run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr}}")
+    run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr,bazarr}}")
     setup_dirs()
     print("Done. Run: nixflix full-refresh")
 
@@ -50,7 +50,7 @@ def full_refresh():
     print("=== Step 1: Clean state ===")
     for svc in SERVICES:
         run(f"sudo systemctl stop {svc}.service 2>/dev/null || true")
-    run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr}}")
+    run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr,bazarr}}")
     setup_dirs()
 
     print("\n=== Step 2: Rebuild system ===")

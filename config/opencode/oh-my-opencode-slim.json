@@ -57,13 +57,13 @@
         "mcps": []
       },
       "explorer": {
-        "model": "opencode-go/deepseek-v4-flash",
+        "model": "opencode-go/mimo-v2.5",
         "variant": "high",
         "skills": [],
         "mcps": []
       },
       "librarian": {
-        "model": "opencode-go/deepseek-v4-flash",
+        "model": "opencode-go/mimo-v2.5",
         "variant": "high",
         "skills": [],
         "mcps": ["websearch", "context7", "gh_grep"]
@@ -74,7 +74,7 @@
         "mcps": []
       },
       "fixer": {
-        "model": "opencode-go/deepseek-v4-flash",
+        "model": "opencode-go/mimo-v2.5",
         "variant": "high",
         "skills": [],
         "mcps": []
