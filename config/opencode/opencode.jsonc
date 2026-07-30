@@ -1,3 +1,36 @@
 {
-  "$schema": "https://opencode.ai/config.json"
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
+  "permission": {
+    "lsp": "allow"
+  },
+  "mcp": {
+    "codegraph": {
+      "type": "local",
+      "command": ["codegraph", "serve", "--mcp"],
+      "enabled": true
+    }
+  },
+  "plugin": [
+    "@dietrichgeber/ponytail",
+    "opencode-goal-plugin",
+    "opencode-pty",
+    "opencode-supermemory",
+    "oh-my-openagent@latest"
+  ],
+  "command": {
+    "goal": {
+      "description": "Set a session-scoped goal and auto-continue until complete.",
+      "template": "$ARGUMENTS",
+      "agent": "build"
+    }
+  },
+  "agent": {
+    "explore": {
+      "disable": true
+    },
+    "general": {
+      "disable": true
+    }
+  }
 }

@@ -71,6 +71,9 @@ rsync -a --update --delete "${EXCLUDES[@]}" "${HOME}/.config/" "${CONFIG}/"
 mkdir -p "${CONFIG}/zsh"
 rsync -a --update "${HOME}/.zshrc" "${CONFIG}/zsh/.zshrc"
 
+mkdir -p "${CONFIG}/omo"
+rsync -a --update "${HOME}/.omo/omo.jsonc" "${CONFIG}/omo/omo.jsonc"
+
 # Stage everything that changed (or was deleted) in this mirror.
 cd "${DOTFILES}"
 git add -A
