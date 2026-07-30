@@ -178,129 +178,111 @@ with lib;
         lib.mkBefore "${pkgs.coreutils}/bin/mkdir -p ${dataDir}";
     };
 
-    # Pre-write config.yaml with sops-managed API key on first start (or whenever
-    # the apikey is missing/blank — covers the case where an earlier run wrote
-    # a file with an empty apikey because the secret was unreadable).
+    # Pre-write config.yaml with sops-managed API keys, providers, languages, and
+    # quality/scan settings. Idempotent: rewrite when the file is missing OR any of
+    # the critical integration patterns (sonarr: / radarr: blocks, providers,
+    # pt-BR language) are absent. Covers the case where an earlier run wrote a
+    # file with empty credentials because the secret was unreadable, or where the
+    # file predates the auto-API-key integration. Provider credentials (e.g. the
+    # OpenSubtitles.com API key) still need to be entered via the Bazarr UI.
     bazarr = {
       preStart =
         let
-          apiKeyFile = config.sops.secrets."bazarr/api_key".path;
+          bazarrApiKeyFile = config.sops.secrets."bazarr/api_key".path;
+          sonarrApiKeyFile = config.sops.secrets."sonarr/api_key".path;
+          radarrApiKeyFile = config.sops.secrets."radarr/api_key".path;
+          sonarrPort = toString config.nixflix.sonarr.config.hostConfig.port;
+          radarrPort = toString config.nixflix.radarr.config.hostConfig.port;
         in
         ''
           CONFIG_DIR=${config.services.bazarr.dataDir}/config
           CONFIG_FILE=$CONFIG_DIR/config.yaml
           mkdir -p "$CONFIG_DIR"
-          API_KEY=$(cat ${apiKeyFile})
-          # Rewrite if the file is missing OR if the apikey is empty/whitespace.
-          if [ ! -f "$CONFIG_FILE" ] || ! grep -qE '^  apikey: \S' "$CONFIG_FILE"; then
+
+          BAZARR_API_KEY=$(cat ${bazarrApiKeyFile})
+          SONARR_API_KEY=$(cat ${sonarrApiKeyFile})
+          RADARR_API_KEY=$(cat ${radarrApiKeyFile})
+
+          # Rewrite when integration credentials, providers, or languages are
+          # missing. A healthy config has all of: apikey, sonarr:, radarr:,
+          # enabled_providers, pt-BR, addic7ed, podnapisi, opensubtitles.
+          needs_rewrite=0
+          if [ ! -f "$CONFIG_FILE" ]; then
+            needs_rewrite=1
+          else
+            for pattern in '^  apikey: \S' '^  sonarr:' '^  radarr:' '^  enabled_providers:' 'pt-BR' 'addic7ed' 'podnapisi' 'opensubtitles'; do
+              if ! grep -qE "$pattern" "$CONFIG_FILE"; then
+                needs_rewrite=1
+                break
+              fi
+            done
+          fi
+
+          if [ "$needs_rewrite" -eq 1 ]; then
             cat > "$CONFIG_FILE" << EOF
           auth:
-            apikey: $API_KEY
+            apikey: $BAZARR_API_KEY
           general:
             use_sonarr: true
             use_radarr: true
+            minimum_score: 90
+            minimum_score_movie: 90
+            use_postprocessing: true
+            postprocessing_threshold: 90
+            enabled_providers:
+              - addic7ed
+              - podnapisi
+              - opensubtitles
+          sonarr:
+            ip: 127.0.0.1
+            port: ${sonarrPort}
+            base_url: /
+            ssl: false
+            apikey: $SONARR_API_KEY
+            full_update: Daily
+            full_update_hour: 3
+          radarr:
+            ip: 127.0.0.1
+            port: ${radarrPort}
+            base_url: /
+            ssl: false
+            apikey: $RADARR_API_KEY
+            full_update: Daily
+            full_update_hour: 3
+          addic7ed:
+            enabled: true
+          podnapisi:
+            enabled: true
+          opensubtitles:
+            enabled: true
+          languages:
+            enabled:
+              - pt-BR
+              - en
+            profiles:
+              - profileId: 1
+                name: pt-BR + en
+                cutoff: pt-BR
+                items:
+                  - language: pt-BR
+                    audio_exclude: false
+                    forced: false
+                    hi: false
+                  - language: en
+                    audio_exclude: false
+                    forced: false
+                    hi: false
+                mustContain: ""
+                mustNotContain: ""
+                originalFormat: null
+                tag: ""
           EOF
             chown bazarr:${config.services.bazarr.group} "$CONFIG_FILE"
             chmod 600 "$CONFIG_FILE"
+            echo "Bazarr config.yaml regenerated with sops-managed credentials and declarative settings"
+          else
+            echo "Bazarr config.yaml already has integration credentials and providers, leaving alone"
           fi
-        '';
-    };
-
-    # Oneshot service to configure languages, quality settings, scan schedule, and providers
-    # after Bazarr starts. Provider API keys (e.g. OpenSubtitles.com) still need to be
-    # added via the Bazarr UI; this service enables the free providers and applies the
-    # rest of the tutorial's settings declaratively.
-    bazarr-setup = {
-      description = "Configure Bazarr languages, quality settings, scan schedule, and providers";
-      after = [
-        "bazarr.service"
-        "network-online.target"
-      ];
-      requires = [ "bazarr.service" ];
-      wants = [ "network-online.target" ];
-      wantedBy = [ "multi-user.target" ];
-
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        User = "bazarr";
-        Group = config.services.bazarr.group;
-        Restart = "on-failure";
-        RestartSec = "10s";
-      };
-
-      script =
-        let
-          apiKeyFile = config.sops.secrets."bazarr/api_key".path;
-          port = toString config.services.bazarr.listenPort;
-          curl = "${pkgs.curl.bin}/bin/curl";
-        in
-        ''
-          set -eu
-
-          API_KEY=$(cat ${apiKeyFile})
-          BASE_URL="http://127.0.0.1:${port}"
-
-          echo "Waiting for Bazarr API..."
-          for i in $(seq 1 60); do
-            if ${curl} -sf "$BASE_URL/api/system/settings" -H "X-Api-Key: $API_KEY" > /dev/null 2>&1; then
-              echo "Bazarr API ready"
-              break
-            fi
-            if [ "$i" -eq 60 ]; then
-              echo "Timed out waiting for Bazarr"
-              exit 1
-            fi
-            sleep 2
-          done
-
-          echo "Enabling Portuguese..."
-          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
-            -H "X-Api-Key: $API_KEY" \
-            -d "languages-enabled=pt" > /dev/null || true
-
-          echo "Enabling English..."
-          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
-            -H "X-Api-Key: $API_KEY" \
-            -d "languages-enabled=en" > /dev/null || true
-
-          echo "Creating language profile..."
-          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
-            -H "X-Api-Key: $API_KEY" \
-            -d 'languages-profiles=[{"profileId":1,"name":"Portuguese + English","cutoff":"pt","items":[{"language":"pt","audio_exclude":false,"forced":false,"hi":false},{"language":"en","audio_exclude":false,"forced":false,"hi":false}],"mustContain":"","mustNotContain":"","originalFormat":null,"tag":""}]' > /dev/null || true
-
-          # --- Subtitle providers per Jellyfin Full Automation Guide ---
-          # Addic7ed (best for TV) and Podnapisi (good European coverage) work without
-          # credentials; OpenSubtitles.com is also enabled so the user just needs to
-          # drop their free API key in the Bazarr UI.
-          echo "Enabling subtitle providers (Addic7ed, Podnapisi, OpenSubtitles)..."
-          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
-            -H "X-Api-Key: $API_KEY" \
-            -d "general-enabled_providers=addic7ed,podnapisi,opensubtitles" > /dev/null || true
-
-          # --- Quality settings per Jellyfin Full Automation Guide ---
-          echo "Setting subtitle score threshold to 90..."
-          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
-            -H "X-Api-Key: $API_KEY" \
-            -d "general-minimum_score=90" \
-            -d "general-minimum_score_movie=90" > /dev/null || true
-
-          echo "Enabling subtitle post-processing / sync..."
-          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
-            -H "X-Api-Key: $API_KEY" \
-            -d "general-use_postprocessing=true" \
-            -d "general-use_postprocessing_threshold=true" \
-            -d "general-postprocessing_threshold=90" > /dev/null || true
-
-          echo "Scheduling full scan at 3 AM daily..."
-          ${curl} -sf -X POST "$BASE_URL/api/system/settings" \
-            -H "X-Api-Key: $API_KEY" \
-            -d "sonarr-full_update=Daily" \
-            -d "sonarr-full_update_hour=3" \
-            -d "radarr-full_update=Daily" \
-            -d "radarr-full_update_hour=3" > /dev/null || true
-
-          echo "Bazarr setup complete"
         '';
     };
 
