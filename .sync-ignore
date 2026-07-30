@@ -244,7 +244,6 @@ bookmarkbackups
 *.jsonlz4
 *.jsonlz4-*
 *.mozlz4
-*.bak
 *.old
 *.sqlite.bak
 
