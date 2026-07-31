@@ -16,7 +16,7 @@
     "opencode-goal-plugin",
     "opencode-pty",
     "opencode-supermemory",
-    "oh-my-openagent@latest"
+    "oh-my-opencode-slim"
   ],
   "command": {
     "goal": {
