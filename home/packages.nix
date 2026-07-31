@@ -6,9 +6,9 @@
 {
   nixpkgs.config.allowUnfree = true;
 
-  # Rambox and Ferdium are managed out of band by `home/apps.nix` (they
-  # ship AppImages with built-in self-updaters that need a writable path
-  # to update, which the nixpkgs binaries don't have).
+  # Rambox is managed out of band by `home/apps.nix` (it ships an
+  # AppImage with a built-in self-updater that needs a writable path to
+  # update, which the nixpkgs binary doesn't have).
   home.packages =
     with pkgs;
     [

@@ -9,7 +9,7 @@
 - `home/packages.nix` — declarative list of nixpkgs packages installed for
   the user.
 - `home/apps.nix` — AppImage manager for apps that need their own
-  auto-updater (Rambox, Ferdium, AppManager). See "App distribution
+  auto-updater (Rambox, AppManager). See "App distribution
   strategy" below for when to add something here vs. `home/packages.nix`.
 - `home/programs.nix` — `programs.*` Home Manager modules (gh, zsh, fzf,
   ghostty, zed-editor, …).
@@ -52,7 +52,7 @@
   pinned `home-manager` does not yet expose `programs.nodejs`. When bumped,
   switch to `programs.nodejs.enable = true` and remove from `home.packages`
   (see the comment block in `home/programs.nix`).
-- `nixpkgs.config.allowUnfree = true` is required (rambox, ferdium,
+- `nixpkgs.config.allowUnfree = true` is required (rambox,
   google-chrome).
 
 ### App distribution strategy
@@ -60,7 +60,7 @@
 When adding a desktop app, the order of preference is:
 
 1. **Self-updating AppImage via `home/apps.nix`** — preferred for any app
-   with a built-in updater (Electron apps like Rambox, Ferdium, etc.) so
+   with a built-in updater (Electron apps like Rambox, etc.) so
    the in-app updater actually works. The activation script downloads the
    AppImage to `~/Applications/` and drops a wrapper in `~/.local/bin/`.
    After the first `nixup`, the app updates itself in-place. See
@@ -82,7 +82,7 @@ three ways: in-app "Update" button, `appimageupdatetool
 --appimage-update`.
 
 **Electron Wayland flags** are passed via `execArgs` in the `apps`
-attrset of `home/apps.nix` (see the rambox/ferdium entries). They fix
+attrset of `home/apps.nix` (see the rambox entry). They fix
 the fractional-scale blur that Electron otherwise produces on Wayland.
 
 **Tracking the install in this repo.** Use `bin/nix-add nixpkgs#<pkg>`
@@ -245,21 +245,17 @@ home-manager news  # check for breaking changes
 - `home.nix` activation script bootstraps `codegraph` via
   `bun add -g @colbymchenry/codegraph` if it isn't on PATH. Don't move this —
   codegraph is on the critical path for the opencode MCP server.
-- `home/services.nix` defines three `systemd.user.services`: `dotfiles-sync`
-  (oneshot, runs `git pull origin main` after `network-online.target`),
-  `ferdium` and `rambox` (simple, autostart on
-  `graphical-session.target`). All three AppImage-wrapped apps
-  (`ExecStart = ${config.home.homeDirectory}/.local/bin/<name>`) and
-  Ferdium also has a redundant `~/.config/autostart/ferdium.desktop`
-  defined in `home/config-files.nix` — both will start the same binary,
-  which is harmless.
+- `home/services.nix` defines two `systemd.user.services`: `dotfiles-sync`
+  (oneshot, runs `git pull origin main` after `network-online.target`)
+  and `rambox` (simple, autostart on
+  `graphical-session.target`,
+  `ExecStart = ${config.home.homeDirectory}/.local/bin/rambox`).
 - `home/apps.nix` is the AppImage manager. The `apps` attrset maps a
   short name → `{ url, execArgs, desktop }`. The activation script
   downloads each AppImage to `~/Applications/<name>.AppImage` (idempotent
   — skips on subsequent switches so the app's own self-updates aren't
   clobbered) and installs a wrapper at `~/.local/bin/<name>` that runs
-  the AppImage with `execArgs`. The systemd services and the
-  `ferdium.desktop` autostart in `config-files.nix` both call the
+  the AppImage with `execArgs`. The systemd `rambox` service calls the
   wrapper by its stable name.
 - `nixos/programs.nix` enables `programs.appimage.enable` and
   `programs.appimage.binfmt` so the kernel can `exec` an AppImage file

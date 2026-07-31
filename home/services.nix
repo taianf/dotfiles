@@ -24,27 +24,10 @@ in
       };
     };
 
-    # Both apps are managed by `home/apps.nix` (AppImage + wrapper in
-    # ~/.local/bin). The wrappers pass the Wayland flags that the old
+    # Rambox is managed by `home/apps.nix` (AppImage + wrapper in
+    # ~/.local/bin). The wrapper passes the Wayland flags that the old
     # `*Wrapped` symlinkJoin derivations used to add, so the
     # fractional-scaled render stays crisp.
-    ferdium = {
-      Unit = {
-        Description = "Ferdium messaging client";
-        PartOf = [ "graphical-session.target" ];
-        After = [ "graphical-session.target" ];
-      };
-      Install = {
-        WantedBy = [ "graphical-session.target" ];
-      };
-      Service = {
-        Type = "simple";
-        ExecStart = "${appsDir}/ferdium";
-        Restart = "on-failure";
-        RestartSec = 5;
-      };
-    };
-
     rambox = {
       Unit = {
         Description = "Rambox messaging client";
