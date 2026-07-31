@@ -50,6 +50,7 @@ def setup_dirs():
         "lidarr": ("lidarr", "media", ""),
         "prowlarr": ("prowlarr", "prowlarr", ""),
         "seerr": ("seerr", "seerr", ""),
+        "bazarr": ("bazarr", "media", ""),
     }
     for name, (user, group, subdirs) in dirs.items():
         path = f"{STATE}/{name}"

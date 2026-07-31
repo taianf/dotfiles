@@ -64,7 +64,7 @@
   follow-up should be its own commit. Linear per-commit history makes PR
   reviews easier to follow.
 - A PR comment starting with `/oc` or `/opencode` triggers
-  `.github/workflows/opencode.yml` (model: `opencode-go/deepseek-v4-flash`).
+  `.github/workflows/opencode.yml` (model: `opencode-go/mimo-v2.5`).
 
 ### Worktrees
 
