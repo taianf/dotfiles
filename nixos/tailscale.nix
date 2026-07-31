@@ -21,7 +21,12 @@
 # line. Generate the key at https://login.tailscale.com/admin/settings/keys.
 # Tag the key `tag:browser` (or any reusable auth key) so the daemon
 # does not need an admin to approve it on first boot.
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 with lib;
 {
   services.tailscale = {
@@ -68,16 +73,17 @@ with lib;
     script = ''
       set -eu
       AUTH_KEY=$(cat /run/credentials/tailscale-up.service/tailscale_auth_key)
+      TAILSCALE=${pkgs.tailscale}/bin/tailscale
 
       # Skip if already authenticated (e.g. after a reboot).
-      if tailscale status --json 2>/dev/null \
+      if $TAILSCALE status --json 2>/dev/null \
         | ${pkgs.jq}/bin/jq -e '.BackendState == "Running"' >/dev/null 2>&1; then
         echo "Tailscale already authenticated, skipping tailscale up"
         exit 0
       fi
 
       echo "Authenticating this host to Tailscale..."
-      tailscale up --authkey="$AUTH_KEY" --accept-routes
+      $TAILSCALE up --authkey="$AUTH_KEY" --accept-routes
     '';
   };
 
@@ -105,8 +111,9 @@ with lib;
 
     script = ''
       set -eu
+      TAILSCALE=${pkgs.tailscale}/bin/tailscale
       echo "Exposing local nginx on Tailscale HTTPS (port 443)..."
-      tailscale serve --bg --https=443 http://localhost:80
+      $TAILSCALE serve --bg --https=443 http://localhost:80
     '';
   };
 }
