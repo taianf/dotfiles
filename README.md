@@ -15,10 +15,10 @@ dotfiles/
 ├── bin/                           # Custom scripts (added to PATH)
 │   └── secrets                    # Manage encrypted secrets
 ├── home/                          # Home Manager domain modules
-│   ├── packages.nix               # User packages (ferdium, google-chrome, sops, etc.)
+│   ├── packages.nix               # User packages (google-chrome, sops, etc.)
 │   ├── config-files.nix           # XDG config file symlinks (zed, topgrade, opencode)
 │   ├── programs.nix               # Program configuration (zsh, git, ghostty, etc.)
-│   └── services.nix               # Systemd user services (dotfiles-sync, ferdium)
+│   └── services.nix               # Systemd user services (dotfiles-sync, rambox)
 └── nixos/
     ├── configuration.nix          # Main NixOS config — symlinked to /etc/nixos/
     ├── default.nix                # Shared NixOS config (imported by all machines)
@@ -61,10 +61,10 @@ Two layers of Nix manage your system:
 
 Entry point is `home.nix`, which imports domain modules from `home/`:
 
-- `packages.nix` — user packages (ferdium, google-chrome, sops, etc.)
+- `packages.nix` — user packages (google-chrome, sops, etc.)
 - `config-files.nix` — XDG config symlinks (zed, topgrade, opencode)
 - `programs.nix` — program config (zsh, git, ghostty, etc.)
-- `services.nix` — systemd user services (dotfiles-sync, ferdium)
+- `services.nix` — systemd user services (dotfiles-sync, rambox)
 
 ## Setup on a new machine
 
