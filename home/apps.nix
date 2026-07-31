@@ -56,6 +56,21 @@ let
         ];
       };
     };
+
+    appmanager = {
+      # GTK4/Vala, not Electron — handles Wayland natively, so no flags.
+      url = "https://github.com/kem-a/AppManager/releases/download/v3.7.3/AppManager-3.7.3-anylinux-x86_64.AppImage";
+      execArgs = "";
+      desktop = {
+        name = "AppManager";
+        comment = "MacOS-style AppImage installer and manager";
+        categories = [
+          "System"
+          "PackageManager"
+          "Utility"
+        ];
+      };
+    };
   };
 
   appsDir = "${config.home.homeDirectory}/Applications";
@@ -66,6 +81,11 @@ let
   # .desktop file. The wrapper has to be reachable by a stable identifier
   # so the systemd user service and `config-files.nix` autostart can keep
   # referring to a single name even as the AppImage inside is updated.
+  #
+  # `prefixArgs` adds a leading space only when `execArgs` is non-empty, so
+  # the rendered `exec` line stays clean for non-Electron apps that don't
+  # need any flags (no trailing double-space).
+  prefixArgs = args: if args == "" then "" else " ${args}";
   installApp = name: app: ''
     # ${name}
     if [ ! -f ${appsDir}/${name}.AppImage ]; then
@@ -76,7 +96,7 @@ let
     fi
     ${pkgs.coreutils}/bin/mkdir -p ${binDir}
     ${pkgs.coreutils}/bin/install -m755 ${pkgs.writeShellScript "${name}-appimage-wrapper" ''
-      exec ${appsDir}/${name}.AppImage ${app.execArgs or ""} "$@"
+      exec ${appsDir}/${name}.AppImage${prefixArgs (app.execArgs or "")} "$@"
     ''} ${binDir}/${name}
   '';
 in
