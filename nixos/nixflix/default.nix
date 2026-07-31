@@ -303,10 +303,12 @@ with lib;
                 items:
                   - language: pt-BR
                     audio_exclude: false
+                    audio_only_include: false
                     forced: false
                     hi: false
                   - language: en
                     audio_exclude: false
+                    audio_only_include: false
                     forced: false
                     hi: false
                 mustContain: ""
@@ -393,7 +395,7 @@ with lib;
             -d 'settings-general-enabled_providers=opensubtitles' \
             -d 'languages-enabled=pb' \
             -d 'languages-enabled=en' \
-            -d 'languages-profiles=[{"profileId":1,"name":"pt-BR + en","cutoff":1,"items":[{"id":1,"language":"pb","audio_exclude":false,"forced":false,"hi":false},{"id":2,"language":"en","audio_exclude":false,"forced":false,"hi":false}],"mustContain":"","mustNotContain":"","originalFormat":null,"tag":""}]')
+            -d 'languages-profiles=[{"profileId":1,"name":"pt-BR + en","cutoff":1,"items":[{"id":1,"language":"pb","audio_exclude":false,"audio_only_include":false,"forced":false,"hi":false},{"id":2,"language":"en","audio_exclude":false,"audio_only_include":false,"forced":false,"hi":false}],"mustContain":"","mustNotContain":"","originalFormat":null,"tag":""}]')
 
           if [ "$HTTP_CODE" -ge 400 ]; then
             echo "Bazarr setup failed (HTTP $HTTP_CODE):"
