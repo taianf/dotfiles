@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# bin/nix-add — install a package and record it in home/packages.nix.
+#
+# Workflow:
+#   1. Snapshot the user profile manifest (`nix profile list --json`).
+#   2. `nix profile install $@` (installs to ~/.nix-profile).
+#   3. Snapshot again. Find new elements (by store path).
+#   4. Strip `legacyPackages.<system>.` from each element's attrpath to get
+#      the Nix expression (works under the `with pkgs;` in
+#      home/packages.nix).
+#   5. Append the names to the `with pkgs; [ ... ]` list in
+#      home/packages.nix.
+#   6. Remove the just-installed elements from the user profile — the
+#      home-manager install owns them after `nixup`.
+#   7. Print the git diff for review and prompt the user to commit + nixup.
+#
+# Why use the user profile as a vehicle at all? `nix profile install` is
+# the canonical way to resolve a flake spec (`nixpkgs#foo`) and produce
+# the store paths, which is what the home/packages.nix entry will
+# reference. Once recorded, the user-profile copies are removed so
+# home-manager is the single source of truth.
+#
+# Usage: nix-add <pkg-spec> [<pkg-spec> ...]
+#   e.g. nix-add nixpkgs#hello
+#        nix-add nixpkgs#ripgrep nixpkgs#fd
+
+set -euo pipefail
+
+DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+PKGS_FILE="$DOTFILES/home/packages.nix"
+
+die() { echo "nix-add: $*" >&2; exit 1; }
+
+[ "$#" -ge 1 ] || die "usage: nix-add <pkg-spec> [<pkg-spec> ...]"
+
+command -v jq >/dev/null 2>&1 \
+  || die "jq is required (it's in nixos/programs.nix)"
+
+[ -f "$PKGS_FILE" ] \
+  || die "can't find $PKGS_FILE — set DOTFILES= to point at the right repo"
+
+# 1. Snapshot before
+BEFORE=$(mktemp)
+AFTER=$(mktemp)
+TMP=$(mktemp)
+trap 'rm -f "$BEFORE" "$AFTER" "$TMP"' EXIT
+nix profile list --json > "$BEFORE" 2>/dev/null || echo '{"elements":[]}' > "$BEFORE"
+
+# 2. Install
+echo "==> nix profile install $*"
+nix profile install "$@"
+
+# 3. Snapshot after
+nix profile list --json > "$AFTER"
+
+# 4. Find new elements (by store path)
+NEW_JSON=$(jq -s '
+  ([.[0].elements // [] | .[].storePaths // [] | .[]] | flatten) as $before |
+  .[1].elements // [] |
+  map(
+    (.storePaths // [] | flatten) as $sp |
+    select(any($sp[]; . as $p | ($before | index($p)) == null))
+  )
+' "$BEFORE" "$AFTER")
+
+NEW_COUNT=$(echo "$NEW_JSON" | jq 'length')
+[ "$NEW_COUNT" -gt 0 ] \
+  || die "no new manifest entries after install — package was already in the user profile"
+
+# 5. Convert attrpath → Nix expression
+#    "legacyPackages.x86_64-linux.hello"             → "hello"
+#    "legacyPackages.x86_64-linux.python3Packages.x" → "python3Packages.x"
+#    Note: the manifest field is `attrPath` (camelCase), not `attrpath`.
+NIX_NAMES=$(echo "$NEW_JSON" | jq -r '
+  .[] |
+  (.attrPath // "") as $ap |
+  ($ap | sub("^legacyPackages\\.[^.]+\\."; "")) as $stripped |
+  select($stripped != "") |
+  $stripped
+')
+
+# 6. Rollback helper: remove the user-profile copies if we abort after
+#    the install succeeded but something else failed.
+rollback() {
+  echo "$NEW_JSON" | jq -r '.[].storePaths // [] | .[]' 2>/dev/null \
+    | sort -u | while read -r p; do
+      nix profile remove "$p" >/dev/null 2>&1 || true
+    done
+}
+
+# 7. Dupes — bail with a rollback if the package is already declared.
+for name in $NIX_NAMES; do
+  if grep -qE "^[[:space:]]+${name}[[:space:]]*$" "$PKGS_FILE"; then
+    rollback
+    die "'$name' is already in $PKGS_FILE (rolled back user-profile install)"
+  fi
+done
+
+# 8. Insert into home/packages.nix, just before the closing `]` of the
+#    `with pkgs;` list. The structure is:
+#
+#      home.packages =
+#        with pkgs;
+#        [
+#          ... existing packages ...
+#        ]      ← close of with-pkgs list (no semicolon)
+#        ++ [
+#          herdr.packages.${...}
+#        ];
+#
+#    We match the FIRST `[ ... ]` block (by indent) and insert names at
+#    the same indent + 2. The second `];` is at the same indent but only
+#    matches the close-rule when we're not already in_list, so it's left
+#    alone.
+awk -v names="$NIX_NAMES" '
+  /^[[:space:]]+\[$/ {
+    if (!in_list) {
+      in_list = 1
+      match($0, /^[[:space:]]+/)
+      indent = RLENGTH
+    }
+  }
+  in_list && /^[[:space:]]+\];?$/ {
+    match($0, /^[[:space:]]+/)
+    if (RLENGTH == indent) {
+      n = split(names, arr, "\n")
+      pad = sprintf("%*s", indent + 2, "")
+      for (i = 1; i <= n; i++) {
+        if (arr[i] != "") printf "%s%s\n", pad, arr[i]
+      }
+      in_list = 0
+    }
+  }
+  { print }
+' "$PKGS_FILE" > "$TMP"
+
+if cmp -s "$PKGS_FILE" "$TMP"; then
+  rollback
+  die "couldn't locate the \`with pkgs; [ ... ]\` block in $PKGS_FILE — edit it by hand"
+fi
+
+mv "$TMP" "$PKGS_FILE"
+# The trap would delete $TMP; recreate it just to be safe (mv unlinks the
+# source so $TMP is now gone, but the trap will still try to remove it).
+
+# 9. Remove the user-profile copies (home-manager owns them now)
+echo ""
+echo "==> Removing user-profile copies (home-manager will install them on nixup)"
+echo "$NEW_JSON" | jq -r '.[].storePaths // [] | .[]' \
+  | sort -u | while read -r p; do
+      echo "  - $p"
+      nix profile remove "$p" >/dev/null 2>&1 \
+        || echo "    (couldn't remove — handle manually)"
+    done
+
+# 10. Show the diff (only if DOTFILES is a git repo, otherwise just print
+#     the new content — falling through to `git diff --no-index` help text
+#     would be noisy).
+echo ""
+echo "==> Added to $PKGS_FILE:"
+if git -C "$DOTFILES" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git -C "$DOTFILES" --no-pager diff -- "$PKGS_FILE" || true
+else
+  echo "  ($DOTFILES is not a git repo — showing the new file content instead:)"
+  echo ""
+  cat "$PKGS_FILE"
+fi
+
+echo ""
+echo "==> Next:"
+if git -C "$DOTFILES" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "  cd $DOTFILES"
+  echo "  git add home/packages.nix"
+  echo "  git commit"
+  echo "  nixup"
+else
+  echo "  Move $PKGS_FILE into your dotfiles repo, commit, and run nixup."
+fi
