@@ -21,6 +21,9 @@
       url = "github:Maroka-chan/VPN-Confinement";
       flake = false;
     };
+    declarative-flatpak = {
+      url = "github:in-a-dil-emma/declarative-flatpak/latest";
+    };
   };
 
   outputs =
@@ -32,6 +35,7 @@
       sops-nix,
       nixflix,
       vpn-confinement,
+      declarative-flatpak,
       ...
     }:
     let
@@ -52,10 +56,11 @@
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit nixflix vpn-confinement;
+          inherit nixflix vpn-confinement declarative-flatpak;
         };
         modules = [
           sops-nix.nixosModules.sops
+          declarative-flatpak.nixosModules.default
           ./nixos/configuration.nix
           { nixpkgs.overlays = [ nix-cachyos-kernel.overlays.pinned ]; }
         ];
