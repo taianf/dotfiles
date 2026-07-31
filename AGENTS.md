@@ -4,19 +4,36 @@
 
 - `flake.nix` — entry point. Wires two outputs: `homeConfigurations."taian"` and
   `nixosConfigurations."nixos"`.
-- `home.nix` — Home Manager entry. Imports `home/{packages,programs,config-files,services}.nix`.
-  Also defines a custom `ferdiumWrapped` package (Wayland flags) and a codegraph
-  bootstrap activation.
+- `home.nix` — Home Manager entry. Imports `home/{packages,apps,programs,config-files,services}.nix`.
+  Also bootstraps `codegraph` via an activation script.
+- `home/packages.nix` — declarative list of nixpkgs packages installed for
+  the user.
+- `home/apps.nix` — AppImage manager for apps that need their own
+  auto-updater (Rambox, Ferdium, AppManager). See "App distribution
+  strategy" below for when to add something here vs. `home/packages.nix`.
+- `home/programs.nix` — `programs.*` Home Manager modules (gh, zsh, fzf,
+  ghostty, zed-editor, …).
+- `home/services.nix` — user-level systemd services (autostart for the
+  AppImage-wrapped apps, dotfiles sync on boot).
+- `home/config-files.nix` — `xdg.configFile` symlinks for opencode,
+  topgrade, zed, etc.
+- `bin/nixup` — the canonical rebuild script (see Rebuild section).
+- `bin/nix-add` — wrapper around `nix profile install` that records the
+  install in `home/packages.nix` (so the dotfiles stay the source of
+  truth). See "App distribution strategy" below.
 - `nixos/configuration.nix` — machine-specific. **Symlinked to
   `/etc/nixos/configuration.nix`** on the live host. Only safe machine-specific
   things live here (boot, hostname, hardware imports, stateVersion, and
   nixflix/cachyos/nvidia imports).
 - `nixos/default.nix` — shared NixOS config imported by all machines. Imports
   `locale`, `desktop`, `programs`, `hardware`, `users`.
+- `nixos/programs.nix` — shared `programs.*` modules and
+  `programs.appimage.{enable,binfmt,package}` (the latter overrides
+  `appimage-run` with extra libs for problem AppImages — see the comment
+  block there).
 - `nixos/hardware-configuration.nix` — auto-generated per machine by
   `nixos-generate-config`. **Not in this repo.** The symlink in
   `nixos/configuration.nix` points to `/etc/nixos/hardware-configuration.nix`.
-- `bin/nixup` — the canonical rebuild script (see Rebuild section).
 - `bin/nixflix` — Python CLI wrapper (`uv run` in `nixos/nixflix/`) for the
   media stack.
 - `secrets.yaml` — sops-nix encrypted secrets, safe to commit.
@@ -35,7 +52,49 @@
   pinned `home-manager` does not yet expose `programs.nodejs`. When bumped,
   switch to `programs.nodejs.enable = true` and remove from `home.packages`
   (see the comment block in `home/programs.nix`).
-- `nixpkgs.config.allowUnfree = true` is required (ferdium, google-chrome).
+- `nixpkgs.config.allowUnfree = true` is required (rambox, ferdium,
+  google-chrome).
+
+### App distribution strategy
+
+When adding a desktop app, the order of preference is:
+
+1. **Self-updating AppImage via `home/apps.nix`** — preferred for any app
+   with a built-in updater (Electron apps like Rambox, Ferdium, etc.) so
+   the in-app updater actually works. The activation script downloads the
+   AppImage to `~/Applications/` and drops a wrapper in `~/.local/bin/`.
+   After the first `nixup`, the app updates itself in-place. See
+   "Why AppImage is preferred" below.
+2. **nixpkgs package via `home/packages.nix`** — for everything that
+   doesn't have an AppImage (CLI tools, libraries, headless services,
+   non-updating GUI apps). Add directly, or use `bin/nix-add
+nixpkgs#<pkg>` which does the install AND records the name in
+   `home/packages.nix` so the dotfiles stay the source of truth.
+
+**Why AppImage is preferred for up-to-date apps.** An Electron app's
+in-app updater (electron-builder's autoUpdater, etc.) needs to replace
+the running binary. The nixpkgs binary lives in `/nix/store/`
+(read-only), so the updater fails — that's the original "my Rambox has
+an update but I can't update" complaint. The AppImage lives in
+`~/Applications/` and can be replaced in-place. Day-to-day updates work
+three ways: in-app "Update" button, `appimageupdatetool
+~/Applications/<name>.AppImage` (zsync deltas), or `~/.local/bin/<name>
+--appimage-update`.
+
+**Electron Wayland flags** are passed via `execArgs` in the `apps`
+attrset of `home/apps.nix` (see the rambox/ferdium entries). They fix
+the fractional-scale blur that Electron otherwise produces on Wayland.
+
+**Tracking the install in this repo.** Use `bin/nix-add nixpkgs#<pkg>`
+for ad-hoc nixpkgs installs — it does the install, finds the new
+manifest entries, appends the name to `home/packages.nix`, and rolls
+back the user-profile copies. Don't `nix profile install` directly
+without also editing `home/packages.nix`; otherwise the package is
+untracked and `nixup` will desync it on the next switch.
+
+**Tracking `manifest.json`.** Not necessary. The dotfiles (`flake.lock`,
+`home/packages.nix`, and `home/apps.nix`) are already the source of
+truth; `~/.nix-profile/manifest.json` is the derived artifact.
 
 ### Zsh
 
@@ -183,23 +242,46 @@ home-manager news  # check for breaking changes
 
 ## Non-obvious code facts
 
-- `home.nix` defines `ferdiumWrapped` (a `symlinkJoin` over `pkgs.ferdium` with
-  `makeWrapper` flags
-  `--enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer
---ozone-platform=wayland`). Required to fix Ferdium's blurry render on
-  fractional-scaled Wayland.
 - `home.nix` activation script bootstraps `codegraph` via
   `bun add -g @colbymchenry/codegraph` if it isn't on PATH. Don't move this —
   codegraph is on the critical path for the opencode MCP server.
-- `home/services.nix` defines two `systemd.user.services`: `dotfiles-sync`
-  (oneshot, runs `git pull origin main` after `network-online.target`) and
-  `ferdium` (simple, autostart on `graphical-session.target`).
+- `home/services.nix` defines three `systemd.user.services`: `dotfiles-sync`
+  (oneshot, runs `git pull origin main` after `network-online.target`),
+  `ferdium` and `rambox` (simple, autostart on
+  `graphical-session.target`). All three AppImage-wrapped apps
+  (`ExecStart = ${config.home.homeDirectory}/.local/bin/<name>`) and
+  Ferdium also has a redundant `~/.config/autostart/ferdium.desktop`
+  defined in `home/config-files.nix` — both will start the same binary,
+  which is harmless.
+- `home/apps.nix` is the AppImage manager. The `apps` attrset maps a
+  short name → `{ url, execArgs, desktop }`. The activation script
+  downloads each AppImage to `~/Applications/<name>.AppImage` (idempotent
+  — skips on subsequent switches so the app's own self-updates aren't
+  clobbered) and installs a wrapper at `~/.local/bin/<name>` that runs
+  the AppImage with `execArgs`. The systemd services and the
+  `ferdium.desktop` autostart in `config-files.nix` both call the
+  wrapper by its stable name.
+- `nixos/programs.nix` enables `programs.appimage.enable` and
+  `programs.appimage.binfmt` so the kernel can `exec` an AppImage file
+  directly via binfmt_misc (without `binfmt`, the AppImage's own
+  shebang fails because `/bin/bash` doesn't exist on NixOS). The
+  `programs.appimage.package` override injects `icu`, `libxcrypt-legacy`,
+  `python312`, and `python312Packages.torch` into appimage-run's FHS env
+  to fix AppImages that ship their own old glibc.
 - `home/config-files.nix` symlinks opencode, topgrade, zed configs into
   `~/.config/` via `xdg.configFile`. Edits to `config/opencode/*` take effect
   on next `nixup` — no manual symlink needed.
 - `home/programs.nix` initContent: prepends `~/dotfiles/bin` and `~/.bun/bin`
   to PATH, sources `nixflix` zsh completions, evals `prek` completions, and
   aliases `docker` → `podman` (with `docker compose` → `podman compose`).
+- `bin/nix-add` is a bash + jq wrapper around `nix profile install`. It
+  snapshots the user profile manifest, runs the install, finds the new
+  entries by store-path set diff, derives the Nix expression from each
+  `attrPath` (strips `legacyPackages.<system>.`), appends to
+  `home/packages.nix`, then removes the user-profile copies (so
+  home-manager is the single source of truth). It refuses to add a name
+  already in `home/packages.nix` (with rollback) and prints the git
+  diff for review. Test with `nix-add nixpkgs#hello` etc.
 - `bin/nixflix` is a thin wrapper:
   `uv run --directory "$(dirname "$0")/../nixos/nixflix" python -m nixflix.cli "$@"`.
   Subcommands (see `zsh/completions/_nixflix`): `restart`, `refresh`, `clean`,
