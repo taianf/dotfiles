@@ -1,9 +1,41 @@
-# All XDG config entries that used to live here are now managed by the
-# live-wins / repo-mirrors sync model (see bin/sync-dotfiles and the
-# `seed-dotfiles` activation block in home/programs.nix). The seed
-# activation copies ~/dotfiles/config/* -> ~/.config/* (and a few files
-# to ~/) on first activation, with --no-clobber so existing user edits
-# survive every rebuild. After that, the systemd `dotfiles-sync.path`
-# unit in home/services.nix watches ~/.config and auto-commits live
-# edits back to the repo.
-_: { }
+_: {
+  xdg.configFile = {
+    "autostart/ferdium.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Ferdium
+      Exec=ferdium
+      X-GNOME-Autostart-enabled=true
+    '';
+
+    "cosmic/com.system76.CosmicComp/v1/keyboard_config" = {
+      force = true;
+      text = ''
+        (
+            numlock_state: BootOn,
+        )
+      '';
+    };
+    "opencode/.gitignore".source = ../config/opencode/.gitignore;
+    "opencode/command".source = ../config/opencode/command;
+    "opencode/oh-my-opencode-slim.json".source = ../config/opencode/oh-my-opencode-slim.json;
+    "opencode/opencode.json" = {
+      force = true;
+      source = ../config/opencode/opencode.json;
+    };
+    "opencode/opencode.jsonc" = {
+      force = true;
+      source = ../config/opencode/opencode.jsonc;
+    };
+    "opencode/oh-my-openagent.json".source = ../config/opencode/oh-my-openagent.json;
+    "opencode/package.json".source = ../config/opencode/package.json;
+    "opencode/plugins/herdr-agent-state.js".source = ../config/opencode/plugins/herdr-agent-state.js;
+    "opencode/tui.json".source = ../config/opencode/tui.json;
+    "topgrade.toml".source = ../config/topgrade.toml;
+  };
+
+  # oh-my-openagent config — lives at ~/.omo/ (not ~/.config/omo/), so it
+  # needs `home.file` rather than `xdg.configFile`. Symlinked from the
+  # repo so the agent model assignments are reproducible.
+  home.file.".omo/omo.jsonc".source = ../config/omo/omo.jsonc;
+}
