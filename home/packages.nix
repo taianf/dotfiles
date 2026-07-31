@@ -2,6 +2,7 @@
   pkgs,
   herdr,
   ferdiumWrapped,
+  ramboxWrapped,
   ...
 }:
 {
@@ -11,6 +12,7 @@
     with pkgs;
     [
       ferdiumWrapped
+      ramboxWrapped
       ggshield
       google-chrome
       jq
