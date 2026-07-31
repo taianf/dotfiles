@@ -29,7 +29,10 @@ _: {
     };
     "opencode/package.json".source = ../config/opencode/package.json;
     "opencode/plugins/herdr-agent-state.js".source = ../config/opencode/plugins/herdr-agent-state.js;
-    "opencode/tui.json".source = ../config/opencode/tui.json;
+    "opencode/tui.json" = {
+      force = true;
+      source = ../config/opencode/tui.json;
+    };
     "topgrade.toml".source = ../config/topgrade.toml;
   };
 }

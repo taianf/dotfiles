@@ -193,6 +193,27 @@ with lib;
         in
         lib.mkBefore "${pkgs.coreutils}/bin/mkdir -p ${dataDir}";
     };
+    # Wait for Jellyfin before connecting Seerr to it (prevents 401 race)
+    seerr-setup = {
+      after = [ "jellyfin.service" ];
+      wants = [ "jellyfin.service" ];
+      serviceConfig.ExecStartPre = [
+        (pkgs.writeShellScript "wait-jellyfin" ''
+          echo "Waiting for Jellyfin API..."
+          for i in $(seq 1 60); do
+            if ${pkgs.curl.bin}/bin/curl -sf http://127.0.0.1:8096/System/Info/Public >/dev/null 2>&1; then
+              echo "Jellyfin API ready"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "Timed out waiting for Jellyfin"
+              exit 1
+            fi
+            sleep 2
+          done
+        '')
+      ];
+    };
 
     # Pre-write config.yaml with sops-managed API keys, providers, languages, and
     # quality/scan settings. Idempotent: rewrite when the file is missing OR any of

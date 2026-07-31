@@ -15,16 +15,7 @@
       ramboxWrapped
       ggshield
       google-chrome
-      jq
-      nh
-      nil
-      nixd
-      prek
-      nixfmt
       python3
-      sops
-      statix
-      wget
     ]
     ++ [
       herdr.packages.${pkgs.system}.default

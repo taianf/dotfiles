@@ -53,9 +53,14 @@ def full_refresh():
     run(f"sudo rm -rf {STATE}/{{jellyfin,sonarr,radarr,lidarr,prowlarr,seerr,bazarr}}")
     setup_dirs()
 
-    print("\n=== Step 2: Rebuild system ===")
+    print("\n=== Step 2: Reset oneshot services (force re-run after state wipe) ===")
+    for svc in CONFIG_SERVICES:
+        run(f"sudo systemctl stop {svc}.service 2>/dev/null || true")
+        run(f"sudo systemctl reset-failed {svc}.service 2>/dev/null || true")
+
+    print("\n=== Step 3: Rebuild system ===")
     log = subprocess.run(
-        "sudo nixos-rebuild switch --impure --quiet --flake ~/dotfiles#nixos",
+        "nixup",
         capture_output=True,
         text=True,
         shell=True,
@@ -65,18 +70,7 @@ def full_refresh():
         print(log.stdout + log.stderr)
         raise SystemExit(1)
 
-    log = subprocess.run(
-        "nix run home-manager -- init --switch ~/dotfiles -b backup",
-        capture_output=True,
-        text=True,
-        shell=True,
-        check=False,
-    )
-    if log.returncode != 0:
-        print(log.stdout + log.stderr)
-        raise SystemExit(1)
-
-    print("\n=== Step 3: Re-apply config services ===")
+    print("\n=== Step 4: Re-apply config services ===")
     for svc in CONFIG_SERVICES:
         run(f"sudo systemctl restart {svc}.service 2>/dev/null || true")
     print("\nDone.")
