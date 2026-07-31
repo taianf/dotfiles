@@ -15,6 +15,7 @@
       ramboxWrapped
       ggshield
       google-chrome
+      jellyfin-desktop
       python3
     ]
     ++ [
