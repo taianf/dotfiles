@@ -17,8 +17,8 @@
       nh
       nil
       nixd
-      nixfmt
       prek
+      nixfmt
       python3
       sops
       statix

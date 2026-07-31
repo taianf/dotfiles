@@ -188,89 +188,21 @@ home-manager news  # check for breaking changes
   `--enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer
 --ozone-platform=wayland`). Required to fix Ferdium's blurry render on
   fractional-scaled Wayland.
-- `home/programs.nix` activation script bootstraps `codegraph` via
+- `home.nix` activation script bootstraps `codegraph` via
   `bun add -g @colbymchenry/codegraph` if it isn't on PATH. Don't move this —
   codegraph is on the critical path for the opencode MCP server.
-- `home/programs.nix` activation script `seed-dotfiles` copies
-  `~/dotfiles/config/*` → `~/.config/*` (and `~/.zshrc`) on first
-  activation with `--no-clobber`. Idempotent. The list of mappings
-  must stay in sync between `home/programs.nix` (seed), `bin/sync-dotfiles`
-  (auto-mirror), and `bin/sync-dotfiles-on-boot` (additive deploy on
-  boot). Update all three when adding a new tracked file.
-- `home/services.nix` defines three `systemd.user.services` and one
-  `systemd.user.paths`:
-  - `dotfiles-sync.path` watches `~/.config` (PathChanged) and
-    triggers `dotfiles-sync.service`.
-  - `dotfiles-sync.service` (oneshot) runs `bin/sync-dotfiles` —
-    mirrors live → repo and commits.
-  - `dotfiles-sync-on-boot.service` (oneshot, default.target) runs
-    `bin/sync-dotfiles-on-boot` — pulls main and additive-deploys new
-    files. Never overwrites an existing live file.
-  - `ferdium.service` (simple, autostart on `graphical-session.target`).
-- `home/config-files.nix` is intentionally empty. All XDG file entries
-  moved to the file-based sync model: content lives in `config/*`,
-  seeded to live on first activation, mirrored back automatically.
-- `home/programs.nix` programs list (search <https://home-manager-options.extranix.com/>
-  before adding a new `home.packages` entry — most LSP servers and formatters
-  have NO `programs.*` module, so they correctly stay in `home.packages`):
-  zsh, git, ghostty, opencode, fzf, bun, **uv**, **npm** (replaces
-  ad-hoc `pkgs.nodejs` in `home.packages` — see `programs.npm` default
-  package is `pkgs.nodejs`), topgrade, gh, spotify-player, zed-editor
-  (package only — settings are file-based, NOT `userSettings`),
-  autojump. `programs.zsh.initContent` is empty on purpose: `~/.zshrc`
-  is a real file in `config/zsh/.zshrc`, edited freely, auto-mirrored.
+- `home/services.nix` defines two `systemd.user.services`: `dotfiles-sync`
+  (oneshot, runs `git pull origin main` after `network-online.target`) and
+  `ferdium` (simple, autostart on `graphical-session.target`).
+- `home/config-files.nix` symlinks opencode, topgrade, zed configs into
+  `~/.config/` via `xdg.configFile`. Edits to `config/opencode/*` take effect
+  on next `nixup` — no manual symlink needed.
+- `home/programs.nix` initContent: prepends `~/dotfiles/bin` and `~/.bun/bin`
+  to PATH, sources `nixflix` zsh completions, evals `prek` completions, and
+  aliases `docker` → `podman` (with `docker compose` → `podman compose`).
 - `bin/nixflix` is a thin wrapper:
   `uv run --directory "$(dirname "$0")/../nixos/nixflix" python -m nixflix.cli "$@"`.
-  Subcommands (see `zsh/completions/_nixflix`): `restart`, `refresh`,
-  `clean`, `full-refresh`, `setup`, `secrets`, `check`. Always
-  `nixflix secrets`, never `bin/secrets`; always `nixflix restart`,
-  never `nixflix-restart`.
-- `bin/sync-dotfiles` reads `~/dotfiles/.sync-ignore` for rsync
-  excludes (defaults if missing). Idempotent: bails with
-  `sync-dotfiles: no changes` if `git diff --cached --quiet`.
-  Best-effort `git push` — a network failure logs a warning and
-  leaves the commit local for the next run to push.
-
-## Before opening a PR
-
-Run all of these locally before pushing the branch and opening a PR.
-CI only runs `statix check` and will not catch option-name typos,
-broken activation scripts, or unrenderable Markdown.
-
-```bash
-# 1. The repo's primary verification. This is the one that catches
-#    missing/misspelled options in modules that are enabled but not
-#    instantiated as top-level outputs (e.g. custom `plugins` attrsets,
-#    activation scripts). `nix flake check` alone will not catch these.
-nixup --dry-run
-
-# 2. Run every pre-commit hook on every file. Local prek only runs
-#    hooks on staged files by default, which is the wrong thing when
-#    you have unstaged WIP from auto-sync.
-prek run --all-files
-
-# 3. Confirm the diff matches the PR's stated intent.
-git log --oneline main..HEAD   # atomic commits, each a logical chunk
-git diff main...HEAD --stat    # scope is what you described
-
-# 4. If you touched docs (README.md, SYNC.md, AGENTS.md), preview the
-#    rendered Markdown and check for broken links, stale references,
-#    and consistent terminology ("live wins, repo mirrors" not
-#    "model A" or "symlink" — see SYNC.md for the canonical phrasing).
-
-# 5. If you changed any tracked-config mapping (added a new file to
-#    `config/`), verify the three places that need updating are all
-#    consistent:
-#    - home/programs.nix  -> home.activation.seed-dotfiles
-#    - bin/sync-dotfiles   -> rsync (covers config/* -> ~/dotfiles/config/*)
-#    - bin/sync-dotfiles-on-boot -> deploy() lines
-#    A mismatch causes a new file to be missing on first install, or
-#    to never auto-mirror, depending on which side is stale.
-
-# 6. Push and open the PR. NEVER merge yourself — PRs are squash-merged
-#    by the user. The PR body should summarize the WHY of the change
-#    (not the WHAT — the diff shows the WHAT). Link SYNC.md if the
-#    PR touches the dotfile sync model.
-git push -u origin <branch>
-gh pr create --fill --base main
-```
+  Subcommands (see `zsh/completions/_nixflix`): `restart`, `refresh`, `clean`,
+  `full-refresh`, `setup`, `secrets`. The README's references to a separate
+  `secrets` command and `nixflix-restart` are **stale** — use `nixflix secrets`
+  and `nixflix restart`.
