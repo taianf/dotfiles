@@ -1,10 +1,11 @@
 {
   config,
   pkgs,
-  ferdiumWrapped,
-  ramboxWrapped,
   ...
 }:
+let
+  appsDir = "${config.home.homeDirectory}/.local/bin";
+in
 {
   systemd.user.services = {
     dotfiles-sync = {
@@ -23,6 +24,10 @@
       };
     };
 
+    # Both apps are managed by `home/apps.nix` (AppImage + wrapper in
+    # ~/.local/bin). The wrappers pass the Wayland flags that the old
+    # `*Wrapped` symlinkJoin derivations used to add, so the
+    # fractional-scaled render stays crisp.
     ferdium = {
       Unit = {
         Description = "Ferdium messaging client";
@@ -34,7 +39,7 @@
       };
       Service = {
         Type = "simple";
-        ExecStart = "${ferdiumWrapped}/bin/ferdium";
+        ExecStart = "${appsDir}/ferdium";
         Restart = "on-failure";
         RestartSec = 5;
       };
@@ -51,7 +56,7 @@
       };
       Service = {
         Type = "simple";
-        ExecStart = "${ramboxWrapped}/bin/rambox";
+        ExecStart = "${appsDir}/rambox";
         Restart = "on-failure";
         RestartSec = 5;
       };
