@@ -32,7 +32,16 @@ CONFIG_SERVICES = [
     "jellyfin-setup-wizard",
     "jellyfin-metadata-config",
     "jellyfin-system-config",
+    "jellyfin-libraries",
     "seerr-env",
+    # Seerr chain: order matters — each unit Requires the previous, and
+    # restarting a later unit does not re-run earlier ones.
+    "seerr-setup",
+    "seerr-user-settings",
+    "seerr-jellyfin",
+    "seerr-libraries",
+    "seerr-radarr",
+    "seerr-sonarr",
     "bazarr-setup",
 ]
 
