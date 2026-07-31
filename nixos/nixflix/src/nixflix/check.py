@@ -161,10 +161,11 @@ def _check_service_apis():
     return c
 
 
-def _check_cross_service_integration():  # noqa: PLR0912
+def _check_cross_service_integration():  # noqa: PLR0912, PLR0915
     c = _Check("Service-to-service integration")
     radarr_key = _secret("radarr/api_key") or ""
     sonarr_key = _secret("sonarr/api_key") or ""
+    lidarr_key = _secret("lidarr/api_key") or ""
     prowlarr_key = _secret("prowlarr/api_key") or ""
     bazarr_key = _secret("bazarr/api_key") or ""
     seerr_key = _secret("seerr/api_key") or ""
@@ -179,6 +180,11 @@ def _check_cross_service_integration():  # noqa: PLR0912
             "Sonarr → qBittorrent download client",
             "http://127.0.0.1:8989/api/v3/downloadclient",
             sonarr_key,
+        ),
+        (
+            "Lidarr → qBittorrent download client",
+            "http://127.0.0.1:8686/api/v1/downloadclient",
+            lidarr_key,
         ),
     ]:
         st, dt, er = _api_get(url, {"X-Api-Key": key_field})
@@ -200,6 +206,7 @@ def _check_cross_service_integration():  # noqa: PLR0912
     for label, service in [
         ("Prowlarr → Sonarr app sync", "sonarr"),
         ("Prowlarr → Radarr app sync", "radarr"),
+        ("Prowlarr → Lidarr app sync", "lidarr"),
     ]:
         child = _Check(label)
         if pa_data:
@@ -551,6 +558,66 @@ def _check_recyclarr():
     return c
 
 
+def _check_lidarr_config():
+    """Lidarr configuration: root folder, naming, Jellyfin notification.
+
+    Mirrors _check_radarr_sonarr_config for the music side of the stack. Lidarr
+    uses /api/v1 (not v3) and different naming flags (renameTracks, not
+    renameEpisodes). The Music Jellyfin library and qBittorrent download client
+    wiring are checked elsewhere (libraries service + cross-service integration).
+    """
+    c = _Check("Lidarr configuration")
+    lidarr_key = _secret("lidarr/api_key") or ""
+
+    checks = [
+        (
+            "Lidarr root folder configured",
+            "http://127.0.0.1:8686/api/v1/rootfolder",
+            lidarr_key,
+            None,
+        ),
+        (
+            "Lidarr rename tracks enabled",
+            "http://127.0.0.1:8686/api/v1/config/naming",
+            lidarr_key,
+            "renameTracks",
+        ),
+        (
+            "Lidarr → Jellyfin notification",
+            "http://127.0.0.1:8686/api/v1/notification",
+            lidarr_key,
+            "jellyfin",
+        ),
+    ]
+
+    for label, url, key, check in checks:
+        st, dt, er = _api_get(url, {"X-Api-Key": key})
+        child = _Check(label)
+        if check is None:
+            if dt and len(dt) > 0:
+                child.ok(f"path: {dt[0].get('path', 'unknown')}")
+            else:
+                child.fail("no root folder" if dt else f"HTTP {st}: {er}")
+        elif check == "renameTracks":
+            if dt:
+                child.ok() if dt.get("renameTracks") else child.fail("not enabled")
+            else:
+                child.fail(f"HTTP {st}: {er}")
+        elif dt:
+            matches = [n for n in dt if check in json.dumps(n).lower()]
+            child.ok(
+                f"{len(matches)} {check} notification(s)"
+            ) if matches else child.fail(f"no {check} notification")
+        else:
+            child.fail(f"HTTP {st}: {er}")
+        c.children.append(child)
+
+    c.ok() if all(x.passed for x in c.children) else c.fail(
+        "some Lidarr config items are missing"
+    )
+    return c
+
+
 def run_checks() -> int:
     results = [
         _check_services_running(),
@@ -558,6 +625,7 @@ def run_checks() -> int:
         _check_cross_service_integration(),
         _check_prowlarr_indexers(),
         _check_radarr_sonarr_config(),
+        _check_lidarr_config(),
         _check_bazarr_config(),
         _check_recyclarr(),
     ]

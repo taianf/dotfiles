@@ -42,6 +42,7 @@ CONFIG_SERVICES = [
     "seerr-libraries",
     "seerr-radarr",
     "seerr-sonarr",
+    "lidarr-jellyfin-connect",
     "bazarr-setup",
 ]
 

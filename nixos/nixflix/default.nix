@@ -675,5 +675,144 @@ with lib;
           echo "Sonarr → Jellyfin Connect notification configured"
         '';
     };
+
+    # Lidarr → Jellyfin Connect notification: same idea as Radarr/Sonarr's but for
+    # artists/albums/tracks. Mirrors the Jellyfin Full Automation Guide (2026) so the
+    # "Music" Jellyfin library auto-refreshes whenever Lidarr imports an album.
+    # Lidarr uses the v1 API and different event-toggle names from Radarr/Sonarr
+    # (onAlbumDownload / onAlbumAdded / onArtistAdd / onTrackFileDelete instead of
+    # onMovieFileDelete / onSeriesAdd / onEpisodeFileDelete).
+    lidarr-jellyfin-connect = mkIf config.nixflix.lidarr.enable {
+      description = "Configure Lidarr Jellyfin Connect notification";
+      after = [
+        "lidarr.service"
+        "lidarr-config.service"
+        "network-online.target"
+      ];
+      requires = [ "lidarr.service" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        Restart = "on-failure";
+        RestartSec = "10s";
+        LoadCredential = [
+          "lidarr_api_key:${
+            if config.nixflix.lidarr.config.apiKey._secret or null != null then
+              config.nixflix.lidarr.config.apiKey._secret
+            else
+              pkgs.writeText "lidarr-api-key" config.nixflix.lidarr.config.apiKey
+          }"
+          "jellyfin_api_key:${config.sops.secrets."jellyfin/api_key".path}"
+        ];
+      };
+
+      script =
+        let
+          lidarrPort = toString config.nixflix.lidarr.config.hostConfig.port;
+          jellyfinHost = "127.0.0.1";
+          jellyfinPort = toString config.nixflix.jellyfin.network.internalHttpPort;
+          curl = "${pkgs.curl.bin}/bin/curl";
+          jq = "${pkgs.jq}/bin/jq";
+        in
+        ''
+          set -eu
+
+          LIDARR_API_KEY=$(cat /run/credentials/lidarr-jellyfin-connect.service/lidarr_api_key)
+          JELLYFIN_API_KEY=$(cat /run/credentials/lidarr-jellyfin-connect.service/jellyfin_api_key)
+          BASE_URL="http://127.0.0.1:${lidarrPort}/api/v1"
+
+          echo "Waiting for Lidarr API..."
+          for i in $(seq 1 60); do
+            if ${curl} -sf "$BASE_URL/system/status" -H "X-Api-Key: $LIDARR_API_KEY" > /dev/null 2>&1; then
+              echo "Lidarr API ready"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "Timed out waiting for Lidarr"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "Fetching notification schema for Emby / Jellyfin..."
+          SCHEMAS=$(${curl} -s "$BASE_URL/notification/schema" -H "X-Api-Key: $LIDARR_API_KEY")
+          SCHEMA=$(echo "$SCHEMAS" | ${jq} -r --arg impl "Emby / Jellyfin" \
+            '.[] | select(.implementationName == $impl) | @json' | head -n1)
+
+          if [ -z "$SCHEMA" ] || [ "$SCHEMA" = "null" ]; then
+            echo "Emby / Jellyfin notification schema not found in Lidarr"
+            exit 1
+          fi
+
+          echo "Fetching existing notifications..."
+          EXISTING=$(${curl} -s "$BASE_URL/notification" -H "X-Api-Key: $LIDARR_API_KEY")
+
+          EXISTING_ID=$(echo "$EXISTING" | ${jq} -r --arg impl MediaBrowser \
+            '.[] | select(.implementation == $impl) | .id' | head -n1)
+
+          NOTIFICATION=$(echo "$SCHEMA" | ${jq} \
+            --arg host "${jellyfinHost}" \
+            --argjson port ${jellyfinPort} \
+            --arg apiKey "$JELLYFIN_API_KEY" \
+            '
+              .name = "Jellyfin"
+              | .onGrab = false
+              | .onDownload = true
+              | .onUpgrade = true
+              | .onRename = true
+              | .onAlbumAdded = true
+              | .onAlbumDownload = true
+              | .onArtistAdd = true
+              | .onArtistDelete = true
+              | .onTrackFileDelete = true
+              | .onTrackFileDeleteForUpgrade = true
+              | .onImportComplete = true
+              | .onHealthIssue = false
+              | .onHealthRestored = false
+              | .onApplicationUpdate = true
+              | .onManualInteractionRequired = false
+              | .includeHealthWarnings = false
+              | .fields |= map(
+                  if .name == "host" then .value = $host
+                  elif .name == "port" then .value = $port
+                  elif .name == "apiKey" then .value = $apiKey
+                  elif .name == "useSsl" then .value = false
+                  elif .name == "urlBase" then .value = ""
+                  elif .name == "notify" then .value = false
+                  elif .name == "updateLibrary" then .value = true
+                  else . end
+                )
+            ')
+
+          do_request() {
+            local method="$1"
+            local url="$2"
+            ${curl} -s -o /tmp/req_response -w "%{http_code}" \
+              -X "$method" "$url" \
+              -H "X-Api-Key: $LIDARR_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$NOTIFICATION"
+          }
+
+          if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
+            echo "Updating existing Lidarr → Jellyfin notification (ID: $EXISTING_ID)..."
+            HTTP_CODE=$(do_request PUT "$BASE_URL/notification/$EXISTING_ID")
+          else
+            echo "Creating Lidarr → Jellyfin notification..."
+            HTTP_CODE=$(do_request POST "$BASE_URL/notification")
+          fi
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "Request failed (HTTP $HTTP_CODE):"
+            cat /tmp/req_response
+            exit 1
+          fi
+
+          echo "Lidarr → Jellyfin Connect notification configured"
+        '';
+    };
   };
 }
