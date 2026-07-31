@@ -87,6 +87,7 @@ to wire the stack together per the
 | `prowlarr-indexers.service`       | Adds the indexers declared in `nixflix.prowlarr.config.indexers` |
 | `radarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Radarr      |
 | `sonarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Sonarr      |
+| `lidarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Lidarr      |
 | `seerr-setup.service`             | Initial Seerr setup: connect to Jellyfin, sync libraries         |
 | `seerr-user-settings.service`     | Configure Seerr default user settings                            |
 | `seerr-jellyfin.service`          | Maintain Seerr ↔ Jellyfin host settings                          |
