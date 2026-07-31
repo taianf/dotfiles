@@ -26,5 +26,16 @@
     };
     printing.enable = true;
     openssh.enable = true;
+
+    # Keep the host available on the network (Jellyfin streams, SSH, etc.) —
+    # never suspend or hibernate on idle or lid close. The display can still
+    # blank via DPMS / GNOME power settings; this only disables the
+    # system-wide sleep triggers owned by systemd-logind.
+    logind.settings.Login = {
+      IdleAction = "ignore";
+      HandleLidSwitch = "ignore";
+      HandleLidSwitchDocked = "ignore";
+      HandleLidSwitchExternalPower = "ignore";
+    };
   };
 }
