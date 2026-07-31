@@ -14,6 +14,7 @@
     spotify-player.enable = true;
     bun.enable = true;
     fzf.enable = true;
+    autojump.enable = true;
 
     uv = {
       enable = true;
@@ -237,10 +238,4 @@
       };
     };
   };
-
-  # Required for the `autojump` oh-my-zsh plugin: the plugin shells out
-  # to the `autojump` binary, which lives in the `programs.autojump`
-  # package. Without this, every new zsh prints
-  # `[oh-my-zsh] autojump not found. Please install it first.`
-  programs.autojump.enable = true;
 }

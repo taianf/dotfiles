@@ -26,6 +26,7 @@
     };
     printing.enable = true;
     openssh.enable = true;
+    flatpak.enable = true;
 
     # Keep the host available on the network (Jellyfin streams, SSH, etc.) —
     # never suspend or hibernate on idle or lid close. The display can still
