@@ -178,9 +178,12 @@ with lib;
   };
 
   systemd.services = {
-    # Disable non-essential setup services that fail on nixup
+    # prowlarr-indexers fails on nixup before the stack is fully up;
+    # apply it via `nixflix refresh` once everything is running.
+    # seerr-setup is intentionally NOT disabled: it is idempotent (skips the
+    # initial setup once Seerr reports initialized) and is what connects
+    # Seerr to Jellyfin on every boot/nixup.
     prowlarr-indexers.enable = mkForce false;
-    seerr-setup.enable = mkForce false;
     # Seerr overrides
     seerr = {
       serviceConfig.RestrictNamespaces = mkForce false;

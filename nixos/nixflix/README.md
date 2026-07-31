@@ -88,14 +88,20 @@ to wire the stack together per the
 | `radarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Radarr      |
 | `sonarr-jellyfin-connect.service` | Creates/updates the Jellyfin Connect notification in Sonarr      |
 | `seerr-setup.service`             | Initial Seerr setup: connect to Jellyfin, sync libraries         |
+| `seerr-user-settings.service`     | Configure Seerr default user settings                            |
 | `seerr-jellyfin.service`          | Maintain Seerr ↔ Jellyfin host settings                          |
+| `seerr-libraries.service`         | Sync Seerr library selections                                    |
 | `seerr-radarr.service`            | Maintain Seerr → Radarr instance(s)                              |
 | `seerr-sonarr.service`            | Maintain Seerr → Sonarr instance(s)                              |
 | `recyclarr.service`               | Syncs TRaSH guide quality profiles to Radarr/Sonarr              |
 
-`seerr-setup` and `prowlarr-indexers` are intentionally disabled at first boot
-(intra-stack dependencies make them fail before everything is up). Run
-`nixflix refresh` after the first successful `nixup` to apply them.
+`prowlarr-indexers` is intentionally disabled at first boot (intra-stack
+dependencies make it fail before everything is up). Run `nixflix refresh`
+after the first successful `nixup` to apply it.
+
+The Seerr chain (`seerr-setup` → `seerr-user-settings` → `seerr-jellyfin` →
+`seerr-libraries` → `seerr-radarr` → `seerr-sonarr`) runs on every
+boot/`nixup` and is re-applied by `nixflix refresh`/`full-refresh`.
 
 ```bash
 nixflix refresh     # re-run all config oneshots
