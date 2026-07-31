@@ -40,12 +40,13 @@
   };
 
   environment.systemPackages = with pkgs; [
+    gnome-software
     jq
     nh
     nil
     nixd
-    prek
     nixfmt
+    prek
     sops
     statix
     wget
