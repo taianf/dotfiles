@@ -5,34 +5,45 @@
   ...
 }:
 
-# Self-updating AppImage manager.
+# AppImage manager for apps that need their own auto-updater.
 #
-# Apps that ship their own auto-updater (electron-builder + AppImageUpdate)
-# can't update when installed via nixpkgs, because the binary lives in
-# /nix/store (read-only). This module moves those apps to ~/Applications/ and
-# exposes them on PATH through wrapper scripts in ~/.local/bin/.
+# This is the **preferred** path for desktop apps — in particular Electron
+# apps with electron-builder's autoUpdater (Rambox, Ferdium, etc.). The
+# in-app updater needs to replace the running binary, which only works
+# if the binary is in a writable path; nixpkgs puts it in /nix/store
+# (read-only) and the updater fails (that's the original "my Rambox
+# has an update but I can't update" complaint). Here we drop the
+# AppImage into `~/Applications/` and let the app update itself in-place.
 #
-# After the first `nixup`, the apps can update themselves in-place. Day-to-day
-# auto-updates work three ways:
-#   1. In-app "Update" button (electron-builder's autoUpdater, default for both
+# Day-to-day auto-updates work three ways:
+#   1. In-app "Update" button (electron-builder's autoUpdater, default for
 #      Rambox and Ferdium).
 #   2. `appimageupdatetool ~/Applications/<name>.AppImage` (CLI, zsync deltas).
 #   3. `~/.local/bin/<name> --appimage-update` (electron-builder passthrough).
 #
-# Adding a new app: append an entry to `apps` below with `url` and (optionally)
-# `execArgs` + `desktop`.
+# **For apps that don't have an AppImage (CLI tools, libraries, headless
+# services, non-updating GUI apps)**, prefer `home/packages.nix` — record
+# them with `bin/nix-add nixpkgs#<pkg>`. The dotfiles ARE the manifest;
+# `~/.nix-profile/manifest.json` is just a derived artifact. See
+# `AGENTS.md` → "App distribution strategy" for the full decision tree.
 #
-# Major-version bumps: when the upstream filename pattern changes (e.g.
-# `Rambox-2.7.0-...AppImage` -> `Rambox-2.8.0-...AppImage`), update the `url`,
-# delete the old `~/Applications/<name>.AppImage`, and re-run `nixup`.
+# Adding a new AppImage app: append an entry to `apps` below with `url`
+# and (optionally) `execArgs` + `desktop`. Major-version bumps (upstream
+# filename pattern changes) require updating the `url`, deleting the old
+# `~/Applications/<name>.AppImage`, and re-running `nixup`.
+#
+# Requires `programs.appimage.enable` and `programs.appimage.binfmt` in
+# `nixos/programs.nix` — `binfmt_misc` is what lets the kernel `exec`
+# an AppImage file directly (the AppImage's own shebang points at
+# `/bin/bash`, which doesn't exist on NixOS).
 
 let
   apps = {
     rambox = {
       url = "https://github.com/ramboxapp/download/releases/download/v2.7.0/Rambox-2.7.0-linux-x64.AppImage";
-      # Electron apps need explicit Wayland flags to render crisply on
-      # fractional-scaled Wayland sessions (the same problem the old
-      # `ramboxWrapped` symlinkJoin solved; see home.nix history for refs).
+      # Electron Wayland flags — fix the fractional-scale blur. Same flag
+      # set the old `waylandElectron` helper added to nixpkgs Electron
+      # apps; here it's applied to the AppImage invocation.
       execArgs = "--enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer --ozone-platform=wayland";
       desktop = {
         name = "Rambox";
@@ -59,6 +70,7 @@ let
 
     appmanager = {
       # GTK4/Vala, not Electron — handles Wayland natively, so no flags.
+      # Not in nixpkgs; the AppImage is the only path.
       url = "https://github.com/kem-a/AppManager/releases/download/v3.7.3/AppManager-3.7.3-anylinux-x86_64.AppImage";
       execArgs = "";
       desktop = {
