@@ -12,6 +12,7 @@
     ./cachyos-kernel.nix
     ./p275mv-plus.nix
     ./sops.nix
+    ./tailscale.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
