@@ -11,6 +11,7 @@ from urllib.request import urlopen
 SECRETS_DIR = "/run/secrets"
 BAZARR_MIN_SCORE = 90
 BAZARR_PP_THRESHOLD = 90
+BAZARR_SETUP_MAX_RESTARTS = 3
 SERVICES = [
     "postgresql",
     "nginx",
@@ -400,7 +401,7 @@ def _check_naming_formats(parent: _Check, radarr_key: str, sonarr_key: str) -> N
         parent.children.append(child)
 
 
-def _check_bazarr_config():
+def _check_bazarr_config():  # noqa: PLR0912, PLR0915
     c = _Check("Bazarr configuration")
     bazarr_key = _secret("bazarr/api_key") or ""
 
@@ -437,6 +438,49 @@ def _check_bazarr_config():
         bp.fail("no profiles" if dt else f"HTTP {st}: {er}")
     c.children.append(bp)
 
+    REQUIRED_PROFILE_KEYS = {
+        "language",
+        "audio_exclude",
+        "audio_only_include",
+        "forced",
+        "hi",
+    }
+    bpf = _Check("Bazarr language profile items have required keys")
+    if dt and len(dt) > 0:
+        bpf_errors = []
+        for profile in dt:
+            profile_name = profile.get("name", "?")
+            items_raw = profile.get("items")
+            if not isinstance(items_raw, str):
+                bpf_errors.append(f'profile "{profile_name}" has no items string')
+                continue
+            try:
+                items = json.loads(items_raw)
+            except (json.JSONDecodeError, TypeError):
+                bpf_errors.append(f'profile "{profile_name}" has malformed items JSON')
+                continue
+            if not isinstance(items, list):
+                bpf_errors.append(
+                    f'profile "{profile_name}" items is'
+                    f" {type(items).__name__}, not a list"
+                )
+                continue
+            for idx, item in enumerate(items):
+                missing = REQUIRED_PROFILE_KEYS - set(item.keys())
+                if missing:
+                    lang = item.get("language", "?")
+                    missing_str = ", ".join(sorted(missing))
+                    bpf_errors.append(
+                        f'profile "{profile_name}" item {idx + 1}'
+                        f" ({lang}) missing: {missing_str}"
+                    )
+        bpf.ok("all profiles have required keys") if not bpf_errors else bpf.fail(
+            "; ".join(bpf_errors)
+        )
+    else:
+        bpf.fail("skipped — no profiles to validate")
+    c.children.append(bpf)
+
     bpr = _Check("Bazarr subtitle providers configured")
     providers = bc_data.get("general", {}).get("enabled_providers", [])
     bpr.ok(f"{len(providers)} provider(s) enabled") if providers else bpr.fail(
@@ -462,6 +506,42 @@ def _check_bazarr_config():
         f"post_processing={use_pp}, threshold={pp_threshold}"
     )
     c.children.append(bpst)
+
+    bcl = _Check("Bazarr-setup service is not in a crash loop")
+    try:
+        r = subprocess.run(
+            [
+                "systemctl",
+                "show",
+                "bazarr-setup.service",
+                "--property=NRestarts",
+                "--property=ActiveEnterTimestamp",
+                "--property=Result",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        props = dict(
+            line.split("=", 1) for line in r.stdout.splitlines() if "=" in line
+        )
+        n_restarts = int(props.get("NRestarts", "0"))
+        result = props.get("Result", "")
+        if n_restarts >= BAZARR_SETUP_MAX_RESTARTS and result in (
+            "exit-code",
+            "signal",
+        ):
+            bcl.fail(
+                f"bazarr-setup.service has restarted {n_restarts} times "
+                f"recently (Result={result}) — likely a bad payload from a "
+                f"recent nixup, see `journalctl -u bazarr-setup.service -n 50`"
+            )
+        else:
+            bcl.ok(f"NRestarts={n_restarts}, Result={result}")
+    except (subprocess.SubprocessError, OSError, ValueError) as e:
+        bcl.fail(f"failed to query systemctl: {e}")
+    c.children.append(bcl)
 
     c.ok() if all(x.passed for x in c.children) else c.fail(
         "some Bazarr config items are missing"
