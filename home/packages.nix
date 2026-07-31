@@ -22,7 +22,6 @@
       python3
       sops
       statix
-      uv
       wget
     ]
     ++ [

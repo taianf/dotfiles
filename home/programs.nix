@@ -15,6 +15,31 @@
     bun.enable = true;
     fzf.enable = true;
 
+    uv = {
+      enable = true;
+      settings = {
+        # On NixOS, system Python is provided by nixpkgs. Don't let uv
+        # auto-download its own interpreter (which would land in
+        # ~/.local/share/uv/python and bypass the Nix store); prefer
+        # system Python for `uv run` etc.
+        python-downloads = "never";
+        python-preference = "only-system";
+      };
+    };
+
+    # Installs `pkgs.nodejs` (node + npm + npx + corepack) via the
+    # `programs.npm` module. Required by the codegraph activation block
+    # in `home.nix` — its `#!/usr/bin/env node` launcher needs `node` on
+    # PATH.
+    npm = {
+      enable = true;
+      settings = {
+        # Keep npm's global prefix inside HOME, not /usr, so `npm i -g`
+        # doesn't touch the immutable Nix store.
+        prefix = "\${HOME}/.npm-global";
+      };
+    };
+
     zsh = {
       enable = true;
       oh-my-zsh = {
@@ -218,15 +243,4 @@
   # package. Without this, every new zsh prints
   # `[oh-my-zsh] autojump not found. Please install it first.`
   programs.autojump.enable = true;
-
-  # Required for `codegraph` (Bun global install) whose launcher has
-  # `#!/usr/bin/env node`. Without this, `codegraph` errors with
-  # `env: 'node': No such file or directory`.
-  #
-  # The pinned `home-manager` (see `flake.lock`) does not yet expose a
-  # `programs.nodejs` module, so we install the package directly at
-  # the top level. When a newer `home-manager` is bumped in, switch
-  # back to `programs.nodejs.enable = true;` per AGENTS.md (prefer
-  # `programs.*` over `home.packages`).
-  home.packages = [ pkgs.nodejs ];
 }
