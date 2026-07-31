@@ -55,18 +55,7 @@ def full_refresh():
 
     print("\n=== Step 2: Rebuild system ===")
     log = subprocess.run(
-        "sudo nixos-rebuild switch --impure --quiet --flake ~/dotfiles#nixos",
-        capture_output=True,
-        text=True,
-        shell=True,
-        check=False,
-    )
-    if log.returncode != 0:
-        print(log.stdout + log.stderr)
-        raise SystemExit(1)
-
-    log = subprocess.run(
-        "nix run home-manager -- init --switch ~/dotfiles -b backup",
+        "nixup",
         capture_output=True,
         text=True,
         shell=True,
