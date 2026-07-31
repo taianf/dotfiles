@@ -2,6 +2,7 @@
   config,
   pkgs,
   ferdiumWrapped,
+  ramboxWrapped,
   ...
 }:
 {
@@ -33,6 +34,23 @@
     Service = {
       Type = "simple";
       ExecStart = "${ferdiumWrapped}/bin/ferdium";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+  };
+
+  systemd.user.services.rambox = {
+    Unit = {
+      Description = "Rambox messaging client";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${ramboxWrapped}/bin/rambox";
       Restart = "on-failure";
       RestartSec = 5;
     };
