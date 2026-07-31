@@ -8,16 +8,16 @@
 # AppImage manager for apps that need their own auto-updater.
 #
 # This is the **preferred** path for desktop apps — in particular Electron
-# apps with electron-builder's autoUpdater (Rambox, Ferdium, etc.). The
+# apps with electron-builder's autoUpdater (Rambox, etc.). The
 # in-app updater needs to replace the running binary, which only works
 # if the binary is in a writable path; nixpkgs puts it in /nix/store
-# (read-only) and the updater fails (that's the original "my Rambox
-# has an update but I can't update" complaint). Here we drop the
+# (read-only) and the updater fails (that's the original "my Rambox has
+# an update but I can't update" complaint). Here we drop the
 # AppImage into `~/Applications/` and let the app update itself in-place.
 #
 # Day-to-day auto-updates work three ways:
 #   1. In-app "Update" button (electron-builder's autoUpdater, default for
-#      Rambox and Ferdium).
+#      Rambox).
 #   2. `appimageupdatetool ~/Applications/<name>.AppImage` (CLI, zsync deltas).
 #   3. `~/.local/bin/<name> --appimage-update` (electron-builder passthrough).
 #
@@ -48,19 +48,6 @@ let
       desktop = {
         name = "Rambox";
         comment = "Workspace messenger that combines many apps into one";
-        categories = [
-          "Network"
-          "InstantMessaging"
-        ];
-      };
-    };
-
-    ferdium = {
-      url = "https://github.com/ferdium/ferdium-app/releases/download/v7.1.2/Ferdium-linux-Portable-7.1.2-x86_64.AppImage";
-      execArgs = "--enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer --ozone-platform=wayland";
-      desktop = {
-        name = "Ferdium";
-        comment = "Multi-platform messaging app based on Franz";
         categories = [
           "Network"
           "InstantMessaging"

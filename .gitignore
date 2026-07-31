@@ -37,7 +37,6 @@ node_modules
 # Browser / Electron runtime
 config/mozilla/
 config/chromium/
-config/ferdium/
 config/google-chrome/
 config/BraveSoftware/
 config/discord/
