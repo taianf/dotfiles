@@ -58,30 +58,40 @@ with lib;
       enable = true;
       config = {
         apiKey._secret = config.sops.secrets."sonarr/api_key".path;
+        hostConfig.bindAddress = "0.0.0.0";
         hostConfig.password._secret = config.sops.secrets."sonarr/password".path;
       };
+      # LAN reachability for phone/tablet on the same WiFi. Bypasses the
+      # reverse-proxy default of bindAddress = "127.0.0.1" set by the
+      # upstream nixflix module when nixflix.reverseProxy.enable is true.
+      openFirewall = true;
     };
 
     radarr = {
       enable = true;
       config = {
         apiKey._secret = config.sops.secrets."radarr/api_key".path;
+        hostConfig.bindAddress = "0.0.0.0";
         hostConfig.password._secret = config.sops.secrets."radarr/password".path;
       };
+      openFirewall = true;
     };
 
     lidarr = {
       enable = true;
       config = {
         apiKey._secret = config.sops.secrets."lidarr/api_key".path;
+        hostConfig.bindAddress = "0.0.0.0";
         hostConfig.password._secret = config.sops.secrets."lidarr/password".path;
       };
+      openFirewall = true;
     };
 
     prowlarr = {
       enable = true;
       config = {
         apiKey._secret = config.sops.secrets."prowlarr/api_key".path;
+        hostConfig.bindAddress = "0.0.0.0";
         hostConfig.password._secret = config.sops.secrets."prowlarr/password".path;
         indexers = [
           { name = "The Pirate Bay"; }
@@ -91,6 +101,7 @@ with lib;
           { name = "LimeTorrents"; }
         ];
       };
+      openFirewall = true;
     };
 
     torrentClients.qbittorrent = {
@@ -104,11 +115,19 @@ with lib;
           TempPath = "/data/downloads/incomplete";
           TempPathEnabled = true;
         };
+        # LAN reachability: bind WebUI to all interfaces (default is
+        # 127.0.0.1 when nixflix.reverseProxy.enable is true). '*' is
+        # qBittorrent's convention for 0.0.0.0.
         Preferences.WebUI = {
+          Address = "*";
           Username = "admin";
           Password_PBKDF2 = "@ByteArray(YWRtaW4==:Lki2TfJQMX2GUP8t6S4sNyLao1XTg/XdkbcsX1ht5UVHybIkvTm6L+TB9tZ2xt8xRy9iW8quaraTOweXb495rg==)";
         };
       };
+      # Open the WebUI port on the firewall. The nixflix qbittorrent
+      # submodule passes unknown attrs through to services.qbittorrent,
+      # which has its own openFirewall option.
+      openFirewall = true;
     };
 
     jellyfin = {
@@ -138,6 +157,8 @@ with lib;
     seerr = {
       enable = true;
       apiKey._secret = config.sops.secrets."seerr/api_key".path;
+      # LAN reachability for phone/tablet on the same WiFi.
+      openFirewall = true;
     };
 
     # TRaSH quality profiles via Recyclarr — syncs community-tested profiles
@@ -157,7 +178,9 @@ with lib;
     dataDir = "${config.nixflix.stateDir}/bazarr";
     listenPort = 6767;
     group = config.nixflix.globals.libraryOwner.group;
-    openFirewall = false;
+    # LAN reachability for phone/tablet on the same WiFi. Bazarr's NixOS
+    # module already binds to 0.0.0.0 by default; just open the firewall.
+    openFirewall = true;
   };
 
   services.nginx.virtualHosts."bazarr.nixflix" = mkIf config.nixflix.nginx.enable {
@@ -192,6 +215,11 @@ with lib;
           dataDir = config.nixflix.seerr.dataDir or "/data/.state/seerr";
         in
         lib.mkBefore "${pkgs.coreutils}/bin/mkdir -p ${dataDir}";
+      # LAN reachability: the upstream nixflix seerr module sets
+      # environment.HOST = "127.0.0.1" whenever the reverse proxy is
+      # enabled. Force it to 0.0.0.0 so the LAN phone/tablet can reach
+      # Seerr on http://<lan-ip>:5055.
+      environment.HOST = mkForce "0.0.0.0";
     };
     # Wait for Jellyfin before connecting Seerr to it (prevents 401 race)
     seerr-setup = {
