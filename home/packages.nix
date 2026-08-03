@@ -14,6 +14,8 @@
     [
       ggshield
       google-chrome
+      helm
+      helmfile
       jellyfin-desktop
       python3
     ]
