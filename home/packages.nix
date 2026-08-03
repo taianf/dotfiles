@@ -15,10 +15,15 @@
       ggshield
       gnumake
       google-chrome
-      helm
+      # Note: not `helm` — that's a polyphonic synthesizer
+      # (https://tytel.org/helm) that occupies the same name in
+      # nixpkgs. The Kubernetes package manager is `kubernetes-helm`.
+      kubernetes-helm
       helmfile
       jellyfin-desktop
+      kubectl
       python3
+      uv
     ]
     ++ [
       herdr.packages.${pkgs.system}.default
