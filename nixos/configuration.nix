@@ -12,7 +12,14 @@
     ./cachyos-kernel.nix
     ./p275mv-plus.nix
     ./sops.nix
+    ./k3s.nix
   ];
+
+  # k3s single-node cluster for the *arr media stack. See ./k3s.nix for
+  # the rationale on port 30080/30443 + the side-by-side cutover. Set
+  # `ingressForward = true` after nixflix is removed to drop the
+  # `:30080` port suffix from the *arr URLs.
+  services.k3s-servarr.enable = true;
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
