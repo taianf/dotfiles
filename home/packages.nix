@@ -3,6 +3,19 @@
   herdr,
   ...
 }:
+let
+  # helmfile's `diff` subcommand shells out to `helm diff upgrade`,
+  # which the base `kubernetes-helm` package doesn't ship. Wrap
+  # helm with the helm-diff plugin, and tell helmfile-wrapped
+  # where to find the wrapped helm's plugins. Per
+  # https://wiki.nixos.org/wiki/Helm_and_Helmfile.
+  myHelm = pkgs.wrapHelm pkgs.kubernetes-helm {
+    plugins = [ pkgs.kubernetes-helmPlugins.helm-diff ];
+  };
+  myHelmfile = pkgs.helmfile-wrapped.override {
+    inherit (myHelm) pluginsDir;
+  };
+in
 {
   nixpkgs.config.allowUnfree = true;
 
@@ -15,11 +28,8 @@
       ggshield
       gnumake
       google-chrome
-      # Note: not `helm` — that's a polyphonic synthesizer
-      # (https://tytel.org/helm) that occupies the same name in
-      # nixpkgs. The Kubernetes package manager is `kubernetes-helm`.
-      kubernetes-helm
-      helmfile
+      myHelm
+      myHelmfile
       jellyfin-desktop
       kubectl
       python3
