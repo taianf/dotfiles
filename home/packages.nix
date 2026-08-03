@@ -18,7 +18,9 @@
       helm
       helmfile
       jellyfin-desktop
+      kubectl
       python3
+      uv
     ]
     ++ [
       herdr.packages.${pkgs.system}.default
