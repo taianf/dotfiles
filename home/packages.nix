@@ -13,6 +13,7 @@
     with pkgs;
     [
       ggshield
+      gnumake
       google-chrome
       helm
       helmfile
