@@ -51,4 +51,17 @@
     statix
     wget
   ];
+
+  # Share the sudo credential cache across every TTY so non-interactive
+  # subprocesses (AI agents, scripts, hook-driven tooling) can use a
+  # `sudo -v` the user typed into an interactive terminal. Default
+  # behavior is per-TTY, which makes every TTY in a subshell prompt
+  # for the password — incompatible with bash invocations from a
+  # coding agent that has no PTY. The 10-minute default timestamp
+  # timeout is unchanged. See https://www.dgt.is/blog/2026-03-10-ai-sudo-with-agents/
+  # for the matching agent-side helper. Security note: any local
+  # process can use the cached creds during the timeout window;
+  # this is appropriate for a personal dev machine, NOT for shared
+  # systems (use NOPASSWD per-command or polkit there).
+  security.sudo.extraConfig = "Defaults timestamp_type=global";
 }
