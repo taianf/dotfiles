@@ -38,6 +38,7 @@ in
       ggshield
       gnumake
       google-chrome
+      k9s
       myHelm
       myHelmfile
       jellyfin-desktop
