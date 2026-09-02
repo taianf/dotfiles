@@ -29,5 +29,12 @@
         ${pkgs.bun}/bin/bun add -g @colbymchenry/codegraph
       fi
     '';
+
+    # Kilo: AI coding agent CLI (https://kilo.ai). Installed via bun global.
+    activation.kilo = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if ! command -v kilo >/dev/null 2>&1; then
+        ${pkgs.bun}/bin/bun add -g @kilocode/cli
+      fi
+    '';
   };
 }

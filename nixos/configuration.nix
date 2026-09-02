@@ -4,7 +4,7 @@
 {
   imports = [
     /etc/nixos/hardware-configuration.nix
-    "${vpn-confinement}/modules/vpn-netconf.nix"
+    "${vpn-confinement}/modules/vpn-netns.nix"
     ./default.nix
     ./nvidia.nix
     ./cachyos-kernel.nix
