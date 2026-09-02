@@ -3,6 +3,7 @@
   pkgs,
   lib,
   herdr,
+  kilocode,
   ...
 }:
 {

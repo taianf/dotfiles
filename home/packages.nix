@@ -1,6 +1,7 @@
 {
   pkgs,
   herdr,
+  kilocode,
   ...
 }:
 let
@@ -48,5 +49,6 @@ in
     ]
     ++ [
       herdr.packages.${pkgs.system}.default
+      # kilocode.packages.${pkgs.system}.kilo
     ];
 }
