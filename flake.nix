@@ -11,12 +11,11 @@
       url = "github:ogulcancelik/herdr";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
-    sops-nix.url = "github:Mic92/sops-nix";
-    nixflix = {
-      url = "github:kiriwalawren/nixflix";
-      flake = false;
+    kilocode = {
+      url = "github:Kilo-Org/kilocode";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
     vpn-confinement = {
       url = "github:Maroka-chan/VPN-Confinement";
       flake = false;
@@ -31,9 +30,8 @@
       nixpkgs,
       home-manager,
       herdr,
+      kilocode,
       nix-cachyos-kernel,
-      sops-nix,
-      nixflix,
       vpn-confinement,
       declarative-flatpak,
       ...
@@ -49,17 +47,16 @@
         modules = [ ./home.nix ];
 
         extraSpecialArgs = {
-          inherit herdr;
+          inherit herdr kilocode;
         };
       };
 
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit nixflix vpn-confinement declarative-flatpak;
+          inherit vpn-confinement declarative-flatpak;
         };
         modules = [
-          sops-nix.nixosModules.sops
           declarative-flatpak.nixosModules.default
           ./nixos/configuration.nix
           { nixpkgs.overlays = [ nix-cachyos-kernel.overlays.pinned ]; }

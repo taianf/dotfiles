@@ -91,6 +91,26 @@
         "type": "github"
       }
     },
+    "kilocode": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1788353750,
+        "narHash": "sha256-+/KM95WK9HtHgba9QNGSDl+R7u0sG+SalXne00P5bwA=",
+        "owner": "Kilo-Org",
+        "repo": "kilocode",
+        "rev": "24b4b9fef7cbbc877007b3939053efb6fac1b38f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Kilo-Org",
+        "repo": "kilocode",
+        "type": "github"
+      }
+    },
     "nix-cachyos-kernel": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -109,22 +129,6 @@
         "owner": "xddxdd",
         "ref": "release",
         "repo": "nix-cachyos-kernel",
-        "type": "github"
-      }
-    },
-    "nixflix": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1785279985,
-        "narHash": "sha256-cRg2saEF6EznYl3tHt9rHIR3fgaABXlNi2XNZx1Dc2k=",
-        "owner": "kiriwalawren",
-        "repo": "nixflix",
-        "rev": "6b0ae3e3c0cd36a62832588ec3e6bd68e14949c0",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kiriwalawren",
-        "repo": "nixflix",
         "type": "github"
       }
     },
@@ -175,31 +179,14 @@
         "type": "github"
       }
     },
-    "nixpkgs_3": {
-      "locked": {
-        "lastModified": 1782175435,
-        "narHash": "sha256-EMzXKmnOtBQ2MnvpiNOm7E+kOMvdPrIKaeg52Tip2Uk=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "89570f24e97e614aa34aa9ab1c927b6578a43775",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "declarative-flatpak": "declarative-flatpak",
         "herdr": "herdr",
         "home-manager": "home-manager",
+        "kilocode": "kilocode",
         "nix-cachyos-kernel": "nix-cachyos-kernel",
-        "nixflix": "nixflix",
         "nixpkgs": "nixpkgs_2",
-        "sops-nix": "sops-nix",
         "vpn-confinement": "vpn-confinement"
       }
     },
@@ -221,24 +208,6 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "type": "github"
-      }
-    },
-    "sops-nix": {
-      "inputs": {
-        "nixpkgs": "nixpkgs_3"
-      },
-      "locked": {
-        "lastModified": 1783174389,
-        "narHash": "sha256-aCWC8ngycU7OdJrU2+Je3qf+1a2ykuBvpPhZT/9tXMc=",
-        "owner": "Mic92",
-        "repo": "sops-nix",
-        "rev": "f1406619a3884cd5c47992a70b8b35c9c0fcb4c9",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Mic92",
-        "repo": "sops-nix",
         "type": "github"
       }
     },
