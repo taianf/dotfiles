@@ -23,6 +23,10 @@
     declarative-flatpak = {
       url = "github:in-a-dil-emma/declarative-flatpak/latest";
     };
+    nur = {
+      url = "github:nix-community/NUR";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

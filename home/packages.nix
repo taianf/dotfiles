@@ -46,6 +46,7 @@ in
       kubectl
       python3
       uv
+      nur.packages.${pkgs.system}.waydroid-script
     ]
     ++ [
       herdr.packages.${pkgs.system}.default
