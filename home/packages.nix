@@ -1,6 +1,7 @@
 {
   pkgs,
   herdr,
+  kilocode,
   ...
 }:
 let

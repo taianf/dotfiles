@@ -8,7 +8,6 @@
       enable = true;
       enableZshIntegration = true;
     };
-    opencode.enable = true;
     gh.enable = true;
     topgrade.enable = true;
     spotify-player.enable = true;
@@ -111,12 +110,6 @@
           kilo = {
             type = "registry";
           };
-          opencode = {
-            default_config_options = {
-              model = "opencode/deepseek-v4-flash-free";
-            };
-            type = "registry";
-          };
         };
         cli_default_open_behavior = "existing_window";
         agent = {
@@ -169,7 +162,7 @@
             };
           };
           default_model = {
-            provider = "opencode";
+            provider = "kilo";
             model = "free/big-pickle";
             enable_thinking = false;
           };
@@ -190,7 +183,7 @@
               enable_thinking = true;
             }
             {
-              provider = "opencode";
+              provider = "kilo";
               model = "free/big-pickle";
               enable_thinking = false;
             }
