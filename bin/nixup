@@ -5,6 +5,7 @@
 #   nixup             # quiet, show output only on failure
 #   nixup --verbose   # stream full output of every step
 #   nixup --dry-run   # check flake + parse nix files + build activation package, do not switch
+#   nixup --update    # update flake inputs, then rebuild
 #
 # Behavior:
 #   - Runs system rebuild first, then home — independently. One failure
@@ -67,6 +68,15 @@ if [ "${ARG}" = "--dry-run" ]; then
     echo "  ✗ activation package build failed"
     exit 1
   fi
+fi
+
+if [ "${ARG}" = "--update" ]; then
+  echo "==> Updating flake inputs"
+  nix --extra-experimental-features 'nix-command flakes' flake update "${DOTFILES}" || {
+    echo "  ✗ flake update failed"
+    exit 1
+  }
+  echo "  ✓ flake updated"
 fi
 
 # Live rebuild: try both, report both.
