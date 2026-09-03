@@ -229,9 +229,7 @@ nix.settings.trusted-public-keys = [
 ```
 
 The `nix-cachyos-kernel` flake input is wired in `flake.nix` with the `pinned`
-overlay for cache compatibility, and pinned to commit
-`d1c3cadc796061778cf7f62bdbfaf68cf3c3c654` to avoid unexpected rebuilds when
-running `nix flake update`.
+overlay for cache compatibility.
 
 ### Verifying Home Manager changes (do this before opening a PR)
 
