@@ -45,7 +45,7 @@
       "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
     ];
     max-jobs = lib.mkDefault (
-      builtins.fromJSON (builtins.readFile (pkgs.runCommand "nproc" { } "nproc > $out"))
+      builtins.div (builtins.fromJSON (builtins.readFile (pkgs.runCommand "nproc" { } "nproc > $out"))) 2
     );
   };
 }
