@@ -11,7 +11,6 @@
     ./home/packages.nix
     ./home/config-files.nix
     ./home/programs.nix
-    ./home/apps.nix
     ./home/services.nix
   ];
 
