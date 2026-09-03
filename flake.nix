@@ -15,7 +15,7 @@
       url = "github:Kilo-Org/kilocode";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/d1c3cadc796061778cf7f62bdbfaf68cf3c3c654";
     vpn-confinement = {
       url = "github:Maroka-chan/VPN-Confinement";
       flake = false;
