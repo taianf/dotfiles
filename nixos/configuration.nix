@@ -44,5 +44,8 @@
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
     ];
+    max-jobs = lib.mkDefault (
+      builtins.fromJSON (builtins.readFile (pkgs.runCommand "nproc" { } "nproc > $out"))
+    );
   };
 }
