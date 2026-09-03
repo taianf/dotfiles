@@ -211,6 +211,26 @@ Under the hood `nixup` runs
 `sudo nixos-rebuild switch --impure --flake ~/dotfiles#nixos` then
 `nix run home-manager -- init --switch ~/dotfiles -b backup`.
 
+### CachyOS kernel binary cache
+
+The BORE kernel variant is not in `cache.nixos.org`. To download precompiled
+binaries instead of compiling from source, the Lantian substituter is
+configured in `nixos/configuration.nix`:
+
+```nix
+nix.settings.substituters = [
+  "https://cache.nixos.org"
+  "https://attic.xuyh0120.win/lantian"
+];
+nix.settings.trusted-public-keys = [
+  "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+  "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+];
+```
+
+The `nix-cachyos-kernel` flake input is wired in `flake.nix` with the `pinned`
+overlay for cache compatibility.
+
 ### Verifying Home Manager changes (do this before opening a PR)
 
 `nix flake check --no-build` only validates the option-tree shape — it does
