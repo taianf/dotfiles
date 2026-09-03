@@ -8,9 +8,6 @@
   Also bootstraps `codegraph` via an activation script.
 - `home/packages.nix` — declarative list of nixpkgs packages installed for
   the user.
-- `home/apps.nix` — AppImage manager for apps that need their own
-  auto-updater (Rambox, AppManager). See "App distribution
-  strategy" below for when to add something here vs. `home/packages.nix`.
 - `home/programs.nix` — `programs.*` Home Manager modules (gh, zsh, fzf,
   ghostty, zed-editor, …).
 - `home/services.nix` — user-level systemd services (autostart for the
@@ -59,31 +56,11 @@
 
 When adding a desktop app, the order of preference is:
 
-1. **Self-updating AppImage via `home/apps.nix`** — preferred for any app
-   with a built-in updater (Electron apps like Rambox, etc.) so
-   the in-app updater actually works. The activation script downloads the
-   AppImage to `~/Applications/` and drops a wrapper in `~/.local/bin/`.
-   After the first `nixup`, the app updates itself in-place. See
-   "Why AppImage is preferred" below.
-2. **nixpkgs package via `home/packages.nix`** — for everything that
+1. **nixpkgs package via `home/packages.nix`** — for everything that
    doesn't have an AppImage (CLI tools, libraries, headless services,
    non-updating GUI apps). Add directly, or use `bin/nix-add
 nixpkgs#<pkg>` which does the install AND records the name in
    `home/packages.nix` so the dotfiles stay the source of truth.
-
-**Why AppImage is preferred for up-to-date apps.** An Electron app's
-in-app updater (electron-builder's autoUpdater, etc.) needs to replace
-the running binary. The nixpkgs binary lives in `/nix/store/`
-(read-only), so the updater fails — that's the original "my Rambox has
-an update but I can't update" complaint. The AppImage lives in
-`~/Applications/` and can be replaced in-place. Day-to-day updates work
-three ways: in-app "Update" button, `appimageupdatetool
-~/Applications/<name>.AppImage` (zsync deltas), or `~/.local/bin/<name>
---appimage-update`.
-
-**Electron Wayland flags** are passed via `execArgs` in the `apps`
-attrset of `home/apps.nix` (see the rambox entry). They fix
-the fractional-scale blur that Electron otherwise produces on Wayland.
 
 **Tracking the install in this repo.** Use `bin/nix-add nixpkgs#<pkg>`
 for ad-hoc nixpkgs installs — it does the install, finds the new
@@ -91,10 +68,6 @@ manifest entries, appends the name to `home/packages.nix`, and rolls
 back the user-profile copies. Don't `nix profile install` directly
 without also editing `home/packages.nix`; otherwise the package is
 untracked and `nixup` will desync it on the next switch.
-
-**Tracking `manifest.json`.** Not necessary. The dotfiles (`flake.lock`,
-`home/packages.nix`, and `home/apps.nix`) are already the source of
-truth; `~/.nix-profile/manifest.json` is the derived artifact.
 
 ### Zsh
 
@@ -270,13 +243,6 @@ home-manager news  # check for breaking changes
   and `rambox` (simple, autostart on
   `graphical-session.target`,
   `ExecStart = ${config.home.homeDirectory}/.local/bin/rambox`).
-- `home/apps.nix` is the AppImage manager. The `apps` attrset maps a
-  short name → `{ url, execArgs, desktop }`. The activation script
-  downloads each AppImage to `~/Applications/<name>.AppImage` (idempotent
-  — skips on subsequent switches so the app's own self-updates aren't
-  clobbered) and installs a wrapper at `~/.local/bin/<name>` that runs
-  the AppImage with `execArgs`. The systemd `rambox` service calls the
-  wrapper by its stable name.
 - `nixos/programs.nix` enables `programs.appimage.enable` and
   `programs.appimage.binfmt` so the kernel can `exec` an AppImage file
   directly via binfmt_misc (without `binfmt`, the AppImage's own
