@@ -24,4 +24,41 @@
     };
   };
 
+  systemd.services.waydroid-fix-images-path = {
+    description = "Fix waydroid images_path to use /var/lib/waydroid/images";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "waydroid-container.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "waydroid-fix-images-path" ''
+        if [ -f /var/lib/waydroid/waydroid.cfg ]; then
+          sed -i 's|images_path = /etc/waydroid-extra/images|images_path = /var/lib/waydroid/images|' /var/lib/waydroid/waydroid.cfg
+        fi
+      '';
+    };
+  };
+
+  systemd.services.waydroid-post-install = {
+    description = "Post-install waydroid extras (gapps, libhoudini)";
+    after = [ "waydroid-container.service" ];
+    wants = [ "waydroid-container.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "waydroid-post-install" ''
+        set -e
+        FLAG=/var/lib/waydroid/.post-install-done
+        if [ -f "$FLAG" ]; then
+          exit 0
+        fi
+        sleep 10
+        ${pkgs.nur.repos.ataraxiasjel.waydroid-script}/bin/waydroid-script install gapps || true
+        ${pkgs.nur.repos.ataraxiasjel.waydroid-script}/bin/waydroid-script install libhoudini || true
+        touch "$FLAG"
+      '';
+    };
+  };
+
 }

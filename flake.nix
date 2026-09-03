@@ -36,6 +36,7 @@
       herdr,
       kilocode,
       nix-cachyos-kernel,
+      nur,
       vpn-confinement,
       declarative-flatpak,
       ...
@@ -58,7 +59,7 @@
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit vpn-confinement declarative-flatpak;
+          inherit nur vpn-confinement declarative-flatpak;
         };
         modules = [
           declarative-flatpak.nixosModules.default
