@@ -1,11 +1,7 @@
 # Machine-specific configuration — lives in ~/dotfiles, symlinked to /etc/nixos/
 # On new machines: sudo ln -sf ~/dotfiles/nixos/configuration.nix /etc/nixos/configuration.nix
-{
-  vpn-confinement,
-  lib,
 { vpn-confinement, ... }:
-  ...
-}:
+
 {
   imports = [
     /etc/nixos/hardware-configuration.nix
