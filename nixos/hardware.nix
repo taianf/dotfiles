@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ pkgs, waydroid-script, ... }: {
   hardware.i2c.enable = true;
 
   environment.systemPackages = with pkgs; [
@@ -54,8 +54,8 @@
           exit 0
         fi
         sleep 10
-        ${pkgs.nur.repos.ataraxiasjel.waydroid-script}/bin/waydroid-script install gapps || true
-        ${pkgs.nur.repos.ataraxiasjel.waydroid-script}/bin/waydroid-script install libhoudini || true
+        ${waydroid-script.packages.${pkgs.system}.default}/bin/waydroid-script install gapps || true
+        ${waydroid-script.packages.${pkgs.system}.default}/bin/waydroid-script install libhoudini || true
         touch "$FLAG"
       '';
     };

@@ -23,8 +23,8 @@
     declarative-flatpak = {
       url = "github:in-a-dil-emma/declarative-flatpak/latest";
     };
-    nur = {
-      url = "github:nix-community/NUR";
+    waydroid-script = {
+      url = "github:casualsnek/waydroid_script";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -36,7 +36,7 @@
       herdr,
       kilocode,
       nix-cachyos-kernel,
-      nur,
+      waydroid-script,
       vpn-confinement,
       declarative-flatpak,
       ...
@@ -52,14 +52,14 @@
         modules = [ ./home.nix ];
 
         extraSpecialArgs = {
-          inherit herdr kilocode;
+          inherit herdr kilocode waydroid-script;
         };
       };
 
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit nur vpn-confinement declarative-flatpak;
+          inherit waydroid-script vpn-confinement declarative-flatpak;
         };
         modules = [
           declarative-flatpak.nixosModules.default

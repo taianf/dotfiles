@@ -2,6 +2,7 @@
   pkgs,
   herdr,
   kilocode,
+  waydroid-script,
   ...
 }:
 let
@@ -46,7 +47,7 @@ in
       kubectl
       python3
       uv
-      nur.packages.${pkgs.system}.waydroid-script
+      waydroid-script.packages.${pkgs.system}.default
     ]
     ++ [
       herdr.packages.${pkgs.system}.default

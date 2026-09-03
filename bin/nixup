@@ -69,6 +69,15 @@ if [ "${ARG}" = "--dry-run" ]; then
   fi
 fi
 
+if [ "${ARG}" = "--update" ]; then
+  echo "==> Updating flake inputs"
+  nix --extra-experimental-features 'nix-command flakes' flake update "${DOTFILES}" || {
+    echo "  ✗ flake update failed"
+    exit 1
+  }
+  echo "  ✓ flake updated"
+fi
+
 # Live rebuild: try both, report both.
 sys_status=0
 home_status=0
