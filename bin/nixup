@@ -5,6 +5,7 @@
 #   nixup             # quiet, show output only on failure
 #   nixup --verbose   # stream full output of every step
 #   nixup --dry-run   # check flake + parse nix files + build activation package, do not switch
+#   nixup --update    # update flake inputs, then rebuild
 #
 # Behavior:
 #   - Runs system rebuild first, then home — independently. One failure

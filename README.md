@@ -198,7 +198,10 @@ home-manager init --switch ~/dotfiles
 Or use the shorthand:
 
 ```bash
-nixup
+nixup            # rebuild system + home
+nixup --verbose  # stream full output
+nixup --dry-run  # validate without switching
+nixup --update   # update flake inputs, then rebuild
 ```
 
 ## Key concepts

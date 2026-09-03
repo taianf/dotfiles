@@ -1,6 +1,11 @@
 # Machine-specific configuration — lives in ~/dotfiles, symlinked to /etc/nixos/
 # On new machines: sudo ln -sf ~/dotfiles/nixos/configuration.nix /etc/nixos/configuration.nix
-{ vpn-confinement, ... }:
+{
+  vpn-confinement,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
     /etc/nixos/hardware-configuration.nix
@@ -26,8 +31,18 @@
 
   system.stateVersion = "26.05";
 
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
+  nix.settings = {
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    substituters = [
+      "https://cache.nixos.org"
+      "https://attic.xuyh0120.win/lantian"
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+    ];
+  };
 }
