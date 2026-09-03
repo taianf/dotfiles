@@ -84,7 +84,9 @@ sys_status=0
 home_status=0
 
 run_step "Rebuilding NixOS system" \
-  sudo nixos-rebuild switch --impure --flake "${DOTFILES}#nixos"
+  sudo nixos-rebuild switch --impure --flake "${DOTFILES}#nixos" \
+    --option substituters "https://cache.nixos.org https://attic.xuyh0120.win/lantian" \
+    --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
 sys_status=$?
 if [ "${sys_status}" -eq 0 ]; then
   echo "  ✓ system: ok"

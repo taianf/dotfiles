@@ -87,7 +87,15 @@ sudo nixos-generate-config --show-hardware-config | sudo tee /etc/nixos/hardware
 sudo ln -sf ~/dotfiles/nixos/configuration.nix /etc/nixos/configuration.nix
 ```
 
-### 4. Edit machine-specific values
+### 4. Link nix.conf for substituters
+
+```bash
+sudo ln -sf ~/dotfiles/nix/nix.conf /etc/nix/nix.conf
+```
+
+This enables the Lantian substituter for CachyOS kernel binary cache.
+
+### 5. Edit machine-specific values
 
 Open `dotfiles/nixos/configuration.nix` and change:
 

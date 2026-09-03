@@ -1,6 +1,6 @@
 # Machine-specific configuration — lives in ~/dotfiles, symlinked to /etc/nixos/
 # On new machines: sudo ln -sf ~/dotfiles/nixos/configuration.nix /etc/nixos/configuration.nix
-{ vpn-confinement, ... }:
+{ vpn-confinement, pkgs, ... }:
 {
   imports = [
     /etc/nixos/hardware-configuration.nix
@@ -39,7 +39,7 @@
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
     ];
-    max-jobs = lib.mkDefault (
+    max-jobs = pkgs.lib.mkDefault (
       builtins.div (builtins.fromJSON (builtins.readFile (pkgs.runCommand "nproc" { } "nproc > $out"))) 2
     );
   };
