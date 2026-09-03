@@ -3,7 +3,7 @@
 {
   vpn-confinement,
   lib,
-  pkgs,
+{ vpn-confinement, ... }:
   ...
 }:
 {
