@@ -42,7 +42,7 @@ repos:
         exclude: '\.agents/|config/opencode/command/'
 
   - repo: https://github.com/NixOS/nixfmt
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: nixfmt-nix
         exclude: '\.agents/'
@@ -53,12 +53,12 @@ repos:
       - id: gitleaks
 
   - repo: https://github.com/GitGuardian/ggshield
-    rev: v1.54.0
+    rev: v1.56.0
     hooks:
       - id: ggshield
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.5
+    rev: v0.17.1
     hooks:
       - id: ruff-check
         types_or: [python, pyi]
@@ -67,7 +67,7 @@ repos:
         types_or: [python, pyi]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.1
+    rev: v2.4.0
     hooks:
       - id: mypy
         additional_dependencies: [typer]
